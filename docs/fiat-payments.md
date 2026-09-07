@@ -2,7 +2,7 @@
 
 Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same server-to-server initialize contract and the same Hosted Payments Page (HPP), but the flow ends with the card payment itself — there is **no crypto wallet top-up step**.
 
-> **Availability:** Fiat Payments are being rolled out and are enabled **per merchant account**. Until your account is enabled, calls to `POST /payment/fiat/initialize` are rejected. Contact the platform team if you want this flow activated for you.
+> **Availability:** Fiat Payments are implemented but currently **disabled for all merchant accounts** while the platform completes the fiat acquirer rollout. Until your account is enabled, calls to `POST /payment/fiat/initialize` are rejected with `422`. Contact the platform team if you want this flow activated for you.
 
 ## How It Differs from Crypto Payments
 
@@ -13,7 +13,7 @@ Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same
 | `PAYMENT` webhook **plus** `WALLET_TRANSFER` webhook              | `PAYMENT` webhook only                                 |
 | Settlement based on `walletTransferAmount`                        | No wallet-transfer fields on the payment record        |
 
-Everything else works as described on the [Crypto Payments](crypto-payments.md) page: the request and response shapes, the 15-minute `actionUrl` token, the [payment lifecycle](crypto-payments.md#payment-lifecycle) (`INITIALIZED → PENDING → COMPLETED / DECLINED`), reading the payment back via [`GET /payment/record/{id}`](crypto-payments.md#payment-records-and-attempts), and [card whitelisting](crypto-payments.md#card-whitelisting).
+Everything else works as described on the [Crypto Payments](crypto-payments.md) page: the request and response shapes, the 15-minute `actionUrl` token, the [payment lifecycle](crypto-payments.md#payment-lifecycle) (`INITIALIZED → PENDING → COMPLETED / DECLINED`), reading the payment back via [`GET /payment/{id}`](crypto-payments.md#payment-records-and-attempts), and [card whitelisting](crypto-payments.md#card-whitelisting).
 
 ## Initialize a Fiat Payment
 

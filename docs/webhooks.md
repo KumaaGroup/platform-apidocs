@@ -1,12 +1,12 @@
 # Webhooks
 
-Webhooks notify your server in real time when events occur — such as a payment being completed or an open banking transfer finishing. Instead of polling the API, you register a URL and the platform sends HTTP POST requests to it whenever a relevant event happens.
+Webhooks notify your server in real time when events occur — such as a payment being completed or a refund finishing. Instead of polling the API, you register a URL and the platform sends HTTP POST requests to it whenever a relevant event happens.
 
-> **Event types renamed (2026-08):** the webhook event types have been restructured. `CARD_PAYMENT` was renamed to `PAYMENT` — existing `CARD_PAYMENT` webhooks were migrated automatically and keep delivering. The `OPEN_BANKING` event type was **removed and its webhooks deleted**: open banking transactions now emit `PAYMENT` events, so if you relied on an `OPEN_BANKING` webhook you must create a `PAYMENT` one. Refunds, chargebacks, and push-to-card disbursements now have their own event types (`REFUND`, `CHARGEBACK`, `PUSH_TO_CARD`) instead of riding `CARD_PAYMENT` — create a webhook per event type you consume.
+> **Event types renamed (2026-08):** the webhook event types have been restructured. `CARD_PAYMENT` was renamed to `PAYMENT` — existing `CARD_PAYMENT` webhooks were migrated automatically and keep delivering. The `OPEN_BANKING` event type was **removed and its webhooks deleted** (open banking itself has since been removed from the API). Refunds, chargebacks, and push-to-card disbursements now have their own event types (`REFUND`, `CHARGEBACK`, `PUSH_TO_CARD`) instead of riding `CARD_PAYMENT` — create a webhook per event type you consume.
 
 ## Why Webhooks Are Essential
 
-The Platform Merchants API is **asynchronous** in many scenarios. When you create a payment, the initial response confirms the request was accepted, but the final outcome (captured, declined, etc.) is determined later during processing. The same applies to refunds, open banking transfers, and other operations.
+The Platform Merchants API is **asynchronous** in many scenarios. When you initialize a payment, the initial response confirms the request was accepted, but the final outcome (completed, declined, etc.) is determined later while the customer pays on the hosted page. The same applies to refunds, disbursements, and other operations.
 
 **Webhook configuration is required** to reliably know when a payment has been captured or declined. Without webhooks, you would need to continuously poll the API for status changes, which is inefficient and may miss time-sensitive updates.
 
@@ -73,9 +73,9 @@ You can attach up to 5 custom headers to each webhook. These are included in eve
 
 | Event Type        | Triggered When                                          |
 |-------------------|---------------------------------------------------------|
-| `PAYMENT`         | A payment status changes (authorized, captured, declined, etc.) — card payments, payments created via the [initialize flow](crypto-payments.md), [alternative payment methods](alternative-payment-methods.md), and [open banking](open-banking.md) transactions |
+| `PAYMENT`         | A payment created via the [initialize flow](crypto-payments.md) reaches a terminal status — `COMPLETED` or `DECLINED` (with a `responseCode` for declines) |
 | `REFUND`          | A **refund** reaches a terminal status (`COMPLETED`, `DECLINED`, `REJECTED`) — see [Refunds — Webhook Notifications](refunds.md#webhook-notifications) |
-| `CHARGEBACK`      | A **chargeback** recorded against one of your payments changes status (chargebacks share the refund status set — see [Refund Lifecycle](refunds.md#refund-lifecycle)) |
+| `CHARGEBACK`      | A **chargeback** recorded against one of your payments is processed — see [Chargebacks](refunds.md#chargebacks) |
 | `PUSH_TO_CARD`    | A [push-to-card disbursement](card-payments.md#push-to-card) status changes |
 | `WALLET_TRANSFER` | A [Crypto Payment](crypto-payments.md) wallet top-up is captured (`COMPLETED`) or expires unconfirmed (`EXPIRED`) — see [Crypto Payments — Webhooks](crypto-payments.md#webhooks) |
 
@@ -83,11 +83,11 @@ You can attach up to 5 custom headers to each webhook. These are included in eve
 
 The `status` field in the payload reflects the current state of the underlying object. The exact set of values depends on the event type; see the per-object lifecycle docs for the full state machines:
 
-- `PAYMENT` — [Payment Lifecycle](card-payments.md#payment-lifecycle) for card payments, [Crypto Payments — Payment Lifecycle](crypto-payments.md#payment-lifecycle) for the initialize flow, [Open Banking — Transaction Lifecycle](open-banking.md#transaction-lifecycle) for bank transfers
-- `REFUND` / `CHARGEBACK` — [Refund Lifecycle](refunds.md#refund-lifecycle)
+- `PAYMENT` — [Payment Lifecycle](crypto-payments.md#payment-lifecycle); the webhook fires only on the terminal statuses `COMPLETED` and `DECLINED` (intermediate statuses, including the card attempt's own [sub-lifecycle](card-payments.md#card-attempt-lifecycle) transitions such as `AUTH_REQUESTED`, do not trigger notifications)
+- `REFUND` / `CHARGEBACK` — [Refund Lifecycle](refunds.md#refund-lifecycle) / [Chargebacks](refunds.md#chargebacks)
 - `PUSH_TO_CARD` — [Push-to-Card Lifecycle](card-payments.md#push-to-card-lifecycle)
 
-Every webhook status corresponds to a stored record that you can fetch — via `GET /payment/record/{objectId}` for payments created through the initialize flow, or `GET /payment/{objectId}` for payments created through the deprecated direct endpoints. Duplicate-`externalId` submissions never produce a webhook — they are rejected synchronously with `409 Conflict` from the create endpoint (see [Idempotency](idempotency.md)).
+Every webhook status corresponds to a stored object that you can fetch via `GET /payment/{objectId}` (or `GET /push-to-card/payment/{objectId}` for disbursements). Duplicate-`externalId` submissions never produce a webhook — they are rejected synchronously with `409 Conflict` from the create endpoint (see [Idempotency](idempotency.md)).
 
 ## List Webhooks
 

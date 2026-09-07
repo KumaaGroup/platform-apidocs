@@ -1,6 +1,6 @@
 # Idempotency
 
-The Platform Merchants API uses the `externalId` field to guarantee idempotency and prevent duplicate transactions. Every payment, refund, and open banking transaction requires a unique `externalId` provided by you.
+The Platform Merchants API uses the `externalId` field to guarantee idempotency and prevent duplicate transactions. Every payment, refund, and disbursement requires a unique `externalId` provided by you.
 
 ## How It Works
 
@@ -41,33 +41,19 @@ The `externalId` is required on the following endpoints:
 | `POST /payment/fiat/initialize`        | Initialize a fiat payment              |
 | `POST /payment/{id}/refund/initialize` | Request a refund                       |
 | `POST /push-to-card/initialize`        | Create a push-to-card disbursement     |
-| `POST /payment` *(deprecated)*         | Create a direct card payment           |
-| `POST /open-banking/transactions` *(deprecated)* | Create an open banking transaction |
-| `POST /payment/batch` *(deprecated)*   | Create batch payments (per item)       |
-| `POST /payment/crypto` *(deprecated)*  | First-generation crypto initiate       |
-| `POST /payment/{id}/refund` *(deprecated)* | Refund for direct-API payments     |
 
 ## Filtering by External ID
 
 You can look up a transaction using its `externalId` as a query parameter:
 
 ```bash
-curl "https://sandbox-merchants-api.nonprod.paygate.systems/payment/record?externalId=order-48291" \
+curl "https://sandbox-merchants-api.nonprod.paygate.systems/payment?externalId=order-48291" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-(The equivalent filter exists on `GET /payment` for payments created via the deprecated direct endpoints, and on `GET /push-to-card/payment` for disbursements.)
+(The equivalent filter exists on `GET /push-to-card/payment` for disbursements.)
 
 This is useful for reconciliation and verifying whether a transaction was already created before retrying.
-
-## Batch Payments
-
-When creating batch payments via `POST /payment/batch`, each payment in the batch must have its own unique `externalId`. If any `externalId` within the batch is duplicated:
-
-- **Duplicate within the batch** — the entire batch is rejected with a `400` error.
-- **Duplicate with an existing transaction** — the entire batch is rejected with a `409 Conflict` error.
-
-Batch payments are atomic: all succeed or none are created.
 
 ## Safe Retry Pattern
 
@@ -75,7 +61,7 @@ Batch payments are atomic: all succeed or none are created.
 1. Generate a unique externalId for the transaction
 2. Send the API request
 3. If you receive a network error or timeout:
-   a. Query GET /payment/record?externalId=YOUR_ID to check if it was created
+   a. Query GET /payment?externalId=YOUR_ID to check if it was created
    b. If found, use the existing transaction
    c. If not found, retry the original request with the same externalId
 4. If you receive a 409 Conflict, the transaction already exists — no action needed

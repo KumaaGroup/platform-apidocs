@@ -1,8 +1,8 @@
-# Refunds
+# Refunds and Chargebacks
 
-You can refund a completed card payment either fully or partially. Refunds are processed against the original payment using its platform-generated `id`.
+You can refund a completed payment either fully or partially with [`POST /payment/{id}/refund/initialize`](#create-a-refund), using the original payment's platform-generated `id`. Chargebacks raised by the customer's bank are recorded against your payments and surfaced the same way as refunds — see [Chargebacks](#chargebacks) below.
 
-> **Which endpoint to use:** payments created via [`POST /payment/crypto/initialize`](crypto-payments.md) are refunded with [`POST /payment/{id}/refund/initialize`](#create-a-refund). The older `POST /payment/{id}/refund` is **deprecated** and remains only for payments created through the deprecated direct card endpoints (see [Deprecated: legacy refunds](#deprecated-legacy-refund-endpoint)).
+> **Removed endpoint (2026-09):** the legacy `POST /payment/{id}/refund` no longer exists — it applied only to payments created through the removed direct card endpoints. All refunds go through `POST /payment/{id}/refund/initialize`.
 
 ## Create a Refund
 
@@ -32,7 +32,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/pay_a
 
 ### Response
 
-Refunds are processed **asynchronously**. A successful request returns **200 OK** with the refund in `REQUESTED` status — the refund record is created immediately and then validated and processed in the background. The final outcome is delivered via [webhook](#webhook-notifications) and can also be polled via `GET /payment/record/{id}`.
+Refunds are processed **asynchronously**. A successful request returns **200 OK** with the refund in `REQUESTED` status — the refund record is created immediately and then validated and processed in the background. The final outcome is delivered via [webhook](#webhook-notifications) and can also be polled via `GET /payment/{id}`.
 
 ```json
 {
@@ -68,18 +68,18 @@ For a full refund (request without `amount`), the response `amount` is the full 
 
 ## Checking Refund Status
 
-Refunds are payment records of type `REFUND`. Use the refund `id` with the payment-record endpoint:
+Refunds are payments of type `REFUND`. Use the refund `id` with the payment endpoint:
 
 ```bash
-curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/record/ref_def456 \
+curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/ref_def456 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-The response includes a `parentPaymentId` field linking the refund back to the original payment, `type: REFUND`, and a `details` object carrying the refund's own status, amount, masked card, `responseCode`, and timestamps. The original payment record's `amountRefunded` field accumulates the refunded total.
+The response includes a `parentPaymentId` field linking the refund back to the original payment, `type: REFUND`, and a `details` object carrying the refund's own status, amount, masked card, `responseCode`, and timestamps. The original payment's `amountRefunded` field accumulates the refunded total.
 
 ## Refund Lifecycle
 
-A refund follows its own state machine, separate from the [card-payment lifecycle](card-payments.md#payment-lifecycle). Statuses such as `AUTH_REQUESTED`, `AUTHORIZED`, and `CAPTURED` never appear on a refund.
+A refund follows its own state machine, separate from the [card attempt lifecycle](card-payments.md#card-attempt-lifecycle). Statuses such as `AUTH_REQUESTED`, `AUTHORIZED`, and `CAPTURED` never appear on a refund.
 
 ```mermaid
 stateDiagram-v2
@@ -131,9 +131,29 @@ For `DECLINED` refunds, the `responseCode` field carries the decline reason. See
 
 > **Note on duplicate `externalId`:** a duplicate is always rejected synchronously with `409 Conflict` — no refund record is created and no webhook is sent. See [Idempotency](idempotency.md) for guidance on choosing `externalId` values.
 
-## Deprecated: Legacy Refund Endpoint
+## Chargebacks
 
-> **Deprecated** — `POST /payment/{id}/refund` applies only to payments created through the deprecated direct card endpoints (`POST /payment`, `POST /payment/batch`, first-generation `POST /payment/crypto`). It accepts the same request body as `/refund/initialize`; its response additionally includes `createdAt`, and those refunds are read back via `GET /payment/{id}`. Once you migrate payment creation to [`POST /payment/crypto/initialize`](crypto-payments.md), use `POST /payment/{id}/refund/initialize` for refunds as well.
+A chargeback is initiated by the customer's bank, not by you — there is no endpoint to create one. When the acquirer reports a chargeback against one of your payments, the platform records it as a payment of **type `CHARGEBACK`**:
+
+- Read it back with `GET /payment/{id}` (or find it via `GET /payment`). Like a refund, it carries a `parentPaymentId` linking to the original payment and a `details` object with the chargeback's own status, amount, masked card, `responseCode`, and timestamps.
+- The original payment's `amountRefunded` field accumulates charged-back amounts together with refunds.
+- A chargeback starts in `REQUESTED` and ends in `COMPLETED` (funds returned to the customer) or `DECLINED` (the chargeback was invalid — for example, it exceeded the remaining refundable amount). The manual-approval statuses of the refund lifecycle do not apply.
+
+### Chargeback webhook
+
+Configure a webhook with event type `CHARGEBACK` (see [Webhooks](webhooks.md)) to be notified when a chargeback is processed. The notification is sent when the chargeback **completes**; the payload follows the standard shape, with `objectId` set to the chargeback's ID:
+
+```json
+{
+  "eventType": "CHARGEBACK",
+  "objectId": "chb_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "externalId": "order-001",
+  "status": "COMPLETED",
+  "timestamp": "2026-09-04T12:00:00Z"
+}
+```
+
+No action is required from you — the webhook is informational, so you can reconcile the charged-back amount in your own systems.
 
 ## Best Practices
 

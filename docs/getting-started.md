@@ -2,7 +2,7 @@
 
 The platform serves two audiences through its REST API:
 
-- **Merchants** accept payments through a hosted payments page, process refunds, initiate open banking transfers, and manage webhooks.
+- **Merchants** accept payments through a hosted payments page, process refunds, send push-to-card disbursements, and manage webhooks.
 - **KumaaGuard partners** send payments for ML-driven fraud risk scoring before submitting them to their own acquirer — see [KumaaGuard](kumaaguard.md).
 
 Each role has its own onboarding, its own API credentials, and its own base URLs. Credentials are scoped to the role's endpoints: a merchant token is not valid on the KumaaGuard endpoints, and a partner token is not valid on the payment endpoints.
@@ -108,12 +108,12 @@ Response:
 
 Redirect your customer to the `actionUrl` (valid for 15 minutes). The full flow — including the wallet top-up step — is described in [Crypto Payments](crypto-payments.md).
 
-> **Deprecated:** the direct card endpoints (`POST /payment`, `POST /payment/batch`, `POST /payment/crypto`, `POST /payment/google-pay`, `POST /payment/apple-pay`) are being phased out. New integrations must use the initialize flow above. (`POST /payment/ptc` has already been removed — use [`POST /push-to-card/initialize`](card-payments.md#push-to-card) for disbursements.)
+> **Removed:** the direct card endpoints (`POST /payment`, `POST /payment/batch`, `POST /payment/crypto`, `POST /payment/google-pay`, `POST /payment/apple-pay`, `POST /payment/ptc`) and the open banking endpoints have been **removed** and return `404`. All payments go through the initialize flow above; disbursements use [`POST /push-to-card/initialize`](card-payments.md#push-to-card).
 
 ### 4. Check the payment
 
 ```bash
-curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/record/pay_abc123 \
+curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/pay_abc123 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -176,7 +176,7 @@ INITIALIZED → PENDING → COMPLETED
            ↘         ↘ DECLINED
 ```
 
-Each payment-method attempt within the record (for example the card payment) has its own sub-lifecycle — see [Crypto Payments — Payment Lifecycle](crypto-payments.md#payment-lifecycle). Refunds, open banking transactions, and push-to-card disbursements each have their own state machines, described on their pages.
+Each payment-method attempt within the payment (for example the card payment) has its own sub-lifecycle — see [Card Attempt Lifecycle](card-payments.md#card-attempt-lifecycle). Refunds, chargebacks, and push-to-card disbursements each have their own state machines, described on their pages.
 
 ### Error Format
 
@@ -195,9 +195,8 @@ Errors are returned in the [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7
 - [Authentication](authentication.md) — Token lifecycle, refresh strategy, and IP whitelisting
 - [Idempotency](idempotency.md) — How `externalId` prevents duplicate transactions
 - [Crypto Payments](crypto-payments.md) — The hosted-page payment flow with merchant wallet top-ups
-- [Card Payments](card-payments.md) — Payment statuses, deprecated direct endpoints, and test cards
-- [Refunds](refunds.md) — Full and partial refund processing
-- [Open Banking](open-banking.md) — Bank transfer transactions *(deprecated)*
+- [Card Payments](card-payments.md) — Card attempt lifecycle, 3DS, push-to-card, and test cards
+- [Refunds and Chargebacks](refunds.md) — Full and partial refund processing, chargeback notifications
 - [Webhooks](webhooks.md) — Event notifications setup
 - [Error Handling](error-handling.md) — Error codes and troubleshooting
 - [Blocklist and Whitelist](blocklist-and-whitelist.md) — Managing blocked customers and allowed cards

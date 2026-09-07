@@ -4,25 +4,9 @@ Crypto Payments are the **standard way to accept payments** on the platform. You
 
 Because your systems never collect, transmit, or store card data, your **PCI DSS exposure is significantly reduced** — cardholder data is entered exclusively on the hosted payments page and never reaches your servers.
 
-> **Important — current endpoint:** The endpoint for this flow is [`POST /payment/crypto/initialize`](#step-1-initialize-a-crypto-payment). Two earlier generations are **deprecated** and must not be used for new integrations:
->
-> - `POST /payment` — the direct one-step card payment API (you collected card data yourself). See [Card Payments](card-payments.md).
-> - `POST /payment/crypto` — the first-generation crypto initiate endpoint. It behaves like `POST /payment/crypto/initialize` but does not require the customer name fields and returns the legacy payment shape. Migrate by switching the path, adding `customerFirstName` / `customerLastName`, and reading the payment back via [`GET /payment/record/{id}`](#payment-records-and-attempts).
+> **Important — the earlier direct endpoints have been removed (2026-09):** `POST /payment`, `POST /payment/batch`, the first-generation `POST /payment/crypto`, and the per-method wallet endpoints (`/payment/google-pay`, `/payment/apple-pay`) no longer exist and return `404`. The endpoint for this flow is [`POST /payment/crypto/initialize`](#step-1-initialize-a-crypto-payment). If you are migrating from the direct API, see the [Migration Checklist](#migration-checklist) below.
 
-## What Changes for You
-
-| Before (direct API)                                  | Now (Crypto Payments)                                            |
-|------------------------------------------------------|------------------------------------------------------------------|
-| You collect card data and send it to `POST /payment` | You never touch card data — the customer enters it on the HPP    |
-| One endpoint per payment method                      | One initialization; payment methods are offered on the hosted page |
-| Single-step: payment only                            | Two-step: card payment, then wallet transfer to your merchant wallet |
-| `successUrl` / `failureUrl` optional                 | `successUrl` / `failureUrl` required                             |
-| You redirect the customer only for 3DS               | You always redirect the customer to the HPP                      |
-| Settlement based on the payment amount               | Settlement based on `walletTransferAmount`                       |
-| `PAYMENT` webhook                                    | `PAYMENT` webhook **plus** `WALLET_TRANSFER` webhook             |
-| Payment status via `GET /payment/{id}`               | Payment record with per-method attempts via `GET /payment/record/{id}` |
-
-Card whitelisting works exactly as it does today — cards must be whitelisted before they can be used (see [Card Whitelisting](#card-whitelisting) below).
+Card whitelisting works exactly as before — cards must be whitelisted before they can be used (see [Card Whitelisting](#card-whitelisting) below).
 
 > **Sibling flow:** [Fiat Payments](fiat-payments.md) uses the same initialize contract and hosted page without the crypto wallet top-up step. It is being rolled out and is enabled per merchant account.
 
@@ -47,12 +31,12 @@ sequenceDiagram
     alt 3DS required
         HPP->>C: Redirect to 3DS challenge and back
     end
-    API-->>M: Webhook PAYMENT: status=CAPTURED (or DECLINED)
+    API-->>M: Webhook PAYMENT: status=COMPLETED (or DECLINED)
     Note over HPP: Customer wallet created or reused<br/>(identified by customerEmail)
     C->>HPP: Confirm transfer to merchant wallet (default: full amount)
     API-->>M: Webhook WALLET_TRANSFER (top-up intent captured)
     HPP->>C: Redirect to your successUrl / failureUrl
-    M->>API: GET /payment/record/{id} → walletTransferAmount
+    M->>API: GET /payment/{id} → walletTransferAmount
 ```
 
 Your server only ever talks to the Merchants API with your server-to-server (S2S) credentials. The customer's browser only ever talks to the hosted payments page, authenticated by a short-lived token embedded in the URL.
@@ -155,7 +139,7 @@ Redirect the customer's browser to the `actionUrl`. On the hosted page the custo
 2. Enters the same details required for a regular card payment: card number, cardholder name, expiry, CVC, and billing address.
 3. Completes 3D Secure if the issuer requires it — the hosted page handles the redirect to the 3DS vendor and back. You do not need to do anything.
 
-The hosted page polls the payment status and shows the outcome to the customer. Meanwhile, your server is notified via the [`PAYMENT` webhook](webhooks.md): the card attempt transitions through the familiar card lifecycle and ends in `CAPTURED` or `DECLINED`.
+The hosted page polls the payment status and shows the outcome to the customer. Meanwhile, your server is notified via the [`PAYMENT` webhook](webhooks.md) once the payment reaches a terminal status — `COMPLETED` or `DECLINED`. (The underlying card attempt transitions through its own [sub-lifecycle](card-payments.md#card-attempt-lifecycle); intermediate attempt statuses do not trigger webhooks.)
 
 ### Payment Lifecycle
 
@@ -179,18 +163,20 @@ stateDiagram-v2
 | `COMPLETED`   | A payment attempt succeeded (terminal, success)                               |
 | `DECLINED`    | The payment failed (terminal) — `responseCode` carries the reason, including [3DS failures](card-payments.md#id-3ds-failure-outcomes) |
 
-A **card attempt** inside the record moves through the card sub-lifecycle you may know from the direct API: `REQUESTED → AUTH_REQUESTED (3DS) → AUTHORIZED → CAPTURED`, or `DECLINED` at any of those steps. The attempt-level status and `responseCode` are visible in the `attempts` array of the payment record (see below).
+A **card attempt** inside the payment moves through its own [card sub-lifecycle](card-payments.md#card-attempt-lifecycle): `REQUESTED → AUTH_REQUESTED (3DS) → AUTHORIZED → CAPTURED`, or `DECLINED` at any of those steps. The attempt-level status and `responseCode` are visible in the `attempts` array of the payment (see below).
 
 ## Payment Records and Attempts
 
-You can fetch the payment at any time with `GET /payment/record/{id}` using your S2S token:
+You can fetch the payment at any time with `GET /payment/{id}` using your S2S token:
+
+> **Renamed (2026-09):** these read endpoints used to live at `GET /payment/record` / `GET /payment/record/{id}`. They are now `GET /payment` / `GET /payment/{id}` — same response shape. The old `/payment/record` paths return `404`.
 
 ```bash
-curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/record/pay_550e8400-e29b-41d4-a716-446655440000 \
+curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/pay_550e8400-e29b-41d4-a716-446655440000 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-The response contains the top-level record (status, amounts, redirect URLs, wallet-transfer fields) plus an `attempts` array — one entry per payment method attempt the customer made, **oldest first**:
+The response contains the top-level payment (status, amounts, redirect URLs, wallet-transfer fields) plus an `attempts` array — one entry per payment method attempt the customer made, **oldest first**:
 
 ```json
 {
@@ -231,7 +217,7 @@ The response contains the top-level record (status, amounts, redirect URLs, wall
 
 Each attempt carries a `method` (`CARD` or `BANK_TRANSFER`) and the matching sub-object (`card` or `bankTransfer`) with the attempt's own ID, status, `responseCode`, and timestamps. This is how the platform supports offering several payment methods for a single initialized payment: a failed attempt with one method can be followed by another attempt, and every attempt stays visible in the record.
 
-`GET /payment/record` lists your payment records with the same pagination and `externalId` filtering as the other list endpoints.
+`GET /payment` lists your payments with the same pagination and `externalId` filtering as the other list endpoints.
 
 ## Step 3 — Wallet Top-Up
 
@@ -257,7 +243,7 @@ You should configure **two** webhooks (one per event type — see [Webhooks](web
 
 | Event Type        | Triggered When                                                                                  |
 |-------------------|--------------------------------------------------------------------------------------------------|
-| `PAYMENT`    | The card payment status changes (`AUTH_REQUESTED`, `CAPTURED`, `DECLINED`, …) — unchanged from the previous integration |
+| `PAYMENT`    | The payment reaches a terminal status — `COMPLETED` or `DECLINED` (with a `responseCode` for declines) |
 | `WALLET_TRANSFER` | The customer's top-up to your merchant wallet has been captured (`status: COMPLETED`, sent at intent capture; the on-chain transfer may settle shortly after), **or** the top-up window expired without the customer confirming a transfer (`status: EXPIRED`) |
 
 Create the new webhook:
@@ -289,7 +275,7 @@ The `status` field is `COMPLETED` when the top-up intent was captured, or `EXPIR
 
 ## Tracking the Transferred Amount
 
-`GET /payment/record/{id}` includes optional wallet-transfer fields on every payment record:
+`GET /payment/{id}` includes optional wallet-transfer fields on every payment:
 
 | Field                     | Type   | Description                                                                 |
 |---------------------------|--------|------------------------------------------------------------------------------|
@@ -323,7 +309,7 @@ All errors follow the standard [error format](error-handling.md). Specific to th
 
 ## Testing
 
-The sandbox hosted page accepts the same [test cards](card-payments.md#testing) as the direct API, including the 3DS challenge cards.
+The sandbox hosted page accepts the standard [test cards](card-payments.md#testing), including the 3DS challenge cards.
 
 > **Warning:** Only **synthetic (fictitious) data** may be used in the sandbox environment. Real PII or cardholder data is strictly forbidden.
 
@@ -333,15 +319,17 @@ Suggested end-to-end test:
 2. Open the returned `actionUrl` in a browser.
 3. Pay with an approved test card (e.g. `4111111111111111`, `01/2035`, `Jane Smith`) — or a 3DS card to exercise the challenge flow.
 4. Confirm the wallet transfer on the page.
-5. Verify you received the `PAYMENT` (`CAPTURED`) and `WALLET_TRANSFER` webhooks, and that `GET /payment/record/{id}` shows `walletTransferAmount`.
+5. Verify you received the `PAYMENT` (`COMPLETED`) and `WALLET_TRANSFER` webhooks, and that `GET /payment/{id}` shows `walletTransferAmount`.
 
 ## Migration Checklist
 
+If you integrated against the removed direct endpoints, the following migration is **mandatory** — the old endpoints now return `404`:
+
 1. **Replace** `POST /payment` (or first-generation `POST /payment/crypto`) calls with `POST /payment/crypto/initialize` — drop all `card` fields, provide `customerEmail`, `customerFirstName` and `customerLastName`, and always provide `successUrl` and `failureUrl`.
 2. **Remove card collection** from your checkout entirely; redirect the customer to the `actionUrl` instead (within 15 minutes of initializing).
-3. **Keep** your payment webhook — payloads are unchanged. (If you created it before the 2026-08 event-type restructuring as `CARD_PAYMENT`, it has been renamed to `PAYMENT` automatically — see [Webhooks](webhooks.md).)
+3. **Keep** your payment webhook. (If you created it before the 2026-08 event-type restructuring as `CARD_PAYMENT`, it has been renamed to `PAYMENT` automatically — see [Webhooks](webhooks.md).) Note that `PAYMENT` webhooks now report the payment-level terminal status (`COMPLETED` / `DECLINED`) rather than card statuses like `CAPTURED` or `AUTH_REQUESTED`.
 4. **Add** a `WALLET_TRANSFER` webhook and use it to trigger reconciliation.
-5. **Switch reads** to `GET /payment/record/{id}` / `GET /payment/record` for payments created via the initialize endpoint.
+5. **Switch reads** to `GET /payment/{id}` / `GET /payment` — these return the payment with its `attempts` array. (Payments created through the removed direct endpoints are no longer readable via the API.)
 6. **Base settlement and reconciliation on `walletTransferAmount`**, not on the payment amount.
 7. **Keep your card whitelisting** integration — cards must still be whitelisted (and clear the cooldown) before the customer pays on the HPP. See [Card Whitelisting](#card-whitelisting).
 8. Verify the full flow in sandbox using the checklist in [Testing](#testing) before going live.

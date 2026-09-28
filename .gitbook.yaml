@@ -1,0 +1,10 @@
+root: ./
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md
+
+redirects:
+  readme/crypto-payments: docs/crypto-payments.md
+  readme/fiat-payments: docs/fiat-payments.md
+  readme/server-to-server-card-payments: docs/server-to-server-card-payments.md

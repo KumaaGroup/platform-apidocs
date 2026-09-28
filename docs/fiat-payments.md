@@ -1,6 +1,6 @@
 # Fiat Payments
 
-Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same server-to-server initialize contract and the same Hosted Payments Page (HPP), but the flow ends with the card payment itself — there is **no crypto wallet top-up step**. If your account is enabled to collect card details on your own checkout, see the [server-to-server card payment](card-payments.md#server-to-server-card-payment) instead.
+Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same server-to-server initialize contract and the same Hosted Payments Page (HPP), but the flow ends with the card payment itself — there is **no crypto wallet top-up step**. If your account is enabled to collect card details on your own checkout, see the [server-to-server card payment](server-to-server-card-payments.md) instead.
 
 ## How It Differs from Crypto Payments
 

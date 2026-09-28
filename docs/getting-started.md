@@ -77,7 +77,7 @@ Card whitelisting is **mandatory**: register each card and allow approximately 7
 
 ### 3. Initialize a payment
 
-Use the access token to initialize a payment. You never collect card data yourself — the response contains an `actionUrl` for the hosted payments page where your customer completes the payment. (Where enabled for your account, the card can instead be submitted directly — see [Server-to-Server Card Payment](card-payments.md#server-to-server-card-payment).)
+Use the access token to initialize a payment. You never collect card data yourself — the response contains an `actionUrl` for the hosted payments page where your customer completes the payment. (Where enabled for your account, the card can instead be submitted directly — see [Server-to-Server Card Payment](server-to-server-card-payments.md).)
 
 ```bash
 curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/crypto/initialize \

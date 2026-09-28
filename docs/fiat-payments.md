@@ -1,8 +1,6 @@
 # Fiat Payments
 
-Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same server-to-server initialize contract and the same Hosted Payments Page (HPP), but the flow ends with the card payment itself — there is **no crypto wallet top-up step**.
-
-> **Availability:** Fiat Payments are implemented but currently **disabled for all merchant accounts** while the platform completes the fiat acquirer rollout. Until your account is enabled, calls to `POST /payment/fiat/initialize` are rejected with `422`. Contact the platform team if you want this flow activated for you.
+Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same server-to-server initialize contract and the same Hosted Payments Page (HPP), but the flow ends with the card payment itself — there is **no crypto wallet top-up step**. If your account is enabled to collect card details on your own checkout, see the [server-to-server card payment](server-to-server-card-payments.md) instead.
 
 ## How It Differs from Crypto Payments
 

@@ -2,7 +2,6 @@
 
 Server-to-server card payments let you collect card details on your own checkout and submit them directly to the Merchants API with `POST /payment/card/create` — there is no hosted page. The card charge itself is recorded as a card attempt inside the payment, so the [card attempt lifecycle](card-payments.md#card-attempt-lifecycle), the [3DS decline codes](card-payments.md#id-3ds-failure-outcomes) and the [test cards](card-payments.md#testing) described on the [Card Payments](card-payments.md) page apply unchanged. Cards must be [whitelisted](blocklist-and-whitelist.md#card-whitelist) before they can be used, as for the hosted page.
 
-
 > **PCI DSS:** with this endpoint your systems collect and transmit cardholder data. It is enabled per merchant account and only for organisations that are PCI DSS certified for that scope — otherwise use the hosted payments page. Never log or persist the card number or CVC on your side.
 
 ```mermaid

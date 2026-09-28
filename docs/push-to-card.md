@@ -1,6 +1,5 @@
 # Push-to-Card
 
-
 ```mermaid
 sequenceDiagram
     participant M as Merchant

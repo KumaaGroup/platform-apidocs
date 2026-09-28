@@ -10,8 +10,6 @@ Cards can be charged in two ways. Which of them is available to you depends on y
 | 3D Secure             | Handled on the hosted page                                                                                        | You redirect the customer to the `actionUrl` delivered by webhook      |
 | Create response       | `actionUrl` to send the customer to                                                                               | `id` and `externalId` only — the outcome arrives by webhook            |
 
-> **Availability:** `POST /payment/card/create` is published ahead of its processing rollout so you can build your integration against the final contract. Until the endpoint is enabled for your merchant account, calls are rejected (currently with `501 Not Implemented`). Contact the platform team to be enabled.
-
 This page covers the server-to-server endpoint and the card-side mechanics shared by every card payment: the card attempt lifecycle, 3D Secure handling, push-to-card disbursements, and the sandbox test cards.
 
 ## Card Whitelisting Prerequisite

@@ -2,8 +2,6 @@
 
 You can refund a completed payment either fully or partially with [`POST /payment/{id}/refund/initialize`](#create-a-refund), using the original payment's platform-generated `id`. Chargebacks raised by the customer's bank are recorded against your payments and surfaced the same way as refunds — see [Chargebacks](#chargebacks) below.
 
-> **Removed endpoint (2026-09):** the legacy `POST /payment/{id}/refund` no longer exists — it applied only to payments created through the removed direct card endpoints. All refunds go through `POST /payment/{id}/refund/initialize`.
-
 ## Create a Refund
 
 ```bash
@@ -113,7 +111,7 @@ stateDiagram-v2
 
 ## Webhook Notifications
 
-A `REFUND` webhook **is sent when a refund reaches a terminal status** — `COMPLETED`, `DECLINED`, or `REJECTED`. Intermediate statuses (`REQUESTED`, `PENDING`, `PENDING_APPROVAL`, `APPROVED`) do **not** trigger webhook notifications; poll the refund if you need to observe them. (Refund notifications used to arrive on the `CARD_PAYMENT` event type — see the [event-type restructuring note](webhooks.md).)
+A `REFUND` webhook **is sent when a refund reaches a terminal status** — `COMPLETED`, `DECLINED`, or `REJECTED`. Intermediate statuses (`REQUESTED`, `PENDING`, `PENDING_APPROVAL`, `APPROVED`) do **not** trigger webhook notifications; poll the refund if you need to observe them.)
 
 The webhook payload identifies the refund by its `id` (as `objectId`) and your `externalId`:
 

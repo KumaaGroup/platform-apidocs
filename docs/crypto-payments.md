@@ -4,9 +4,7 @@ Crypto Payments are the **standard way to accept payments** on the platform. You
 
 Because your systems never collect, transmit, or store card data, your **PCI DSS exposure is significantly reduced** — cardholder data is entered exclusively on the hosted payments page and never reaches your servers.
 
-> **Important — the earlier direct endpoints have been removed (2026-09):** `POST /payment`, `POST /payment/batch`, the first-generation `POST /payment/crypto`, and the per-method wallet endpoints (`/payment/google-pay`, `/payment/apple-pay`) no longer exist and return `404`. The endpoint for this flow is [`POST /payment/crypto/initialize`](#step-1-initialize-a-crypto-payment). If you are migrating from the direct API, see the [Migration Checklist](#migration-checklist) below.
-
-Card whitelisting works exactly as before — cards must be whitelisted before they can be used (see [Card Whitelisting](#card-whitelisting) below).
+Cards must be whitelisted before they can be used (see [Card Whitelisting](#card-whitelisting) below).
 
 > **Sibling flows:** [Fiat Payments](fiat-payments.md) uses the same initialize contract and hosted page without the crypto wallet top-up step. Where enabled for a merchant account (and the merchant is PCI DSS certified to handle cardholder data), card details can instead be submitted directly with [`POST /payment/card/create`](card-payments.md#server-to-server-card-payment), skipping the hosted page. Which flows are available depends on your engagement and account configuration.
 
@@ -169,8 +167,6 @@ A **card attempt** inside the payment moves through its own [card sub-lifecycle]
 
 You can fetch the payment at any time with `GET /payment/{id}` using your S2S token:
 
-> **Renamed (2026-09):** these read endpoints used to live at `GET /payment/record` / `GET /payment/record/{id}`. They are now `GET /payment` / `GET /payment/{id}` — same response shape. The old `/payment/record` paths return `404`.
-
 ```bash
 curl https://sandbox-merchants-api.nonprod.paygate.systems/payment/pay_550e8400-e29b-41d4-a716-446655440000 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
@@ -320,16 +316,3 @@ Suggested end-to-end test:
 3. Pay with an approved test card (e.g. `4111111111111111`, `01/2035`, `Jane Smith`) — or a 3DS card to exercise the challenge flow.
 4. Confirm the wallet transfer on the page.
 5. Verify you received the `PAYMENT` (`COMPLETED`) and `WALLET_TRANSFER` webhooks, and that `GET /payment/{id}` shows `walletTransferAmount`.
-
-## Migration Checklist
-
-If you integrated against the removed direct endpoints, the following migration is **mandatory** — the old endpoints now return `404`:
-
-1. **Replace** `POST /payment` (or first-generation `POST /payment/crypto`) calls with `POST /payment/crypto/initialize` — drop all `card` fields, provide `customerEmail`, `customerFirstName` and `customerLastName`, and always provide `successUrl` and `failureUrl`.
-2. **Remove card collection** from your checkout entirely; redirect the customer to the `actionUrl` instead (within 15 minutes of initializing).
-3. **Keep** your payment webhook. (If you created it before the 2026-08 event-type restructuring as `CARD_PAYMENT`, it has been renamed to `PAYMENT` automatically — see [Webhooks](webhooks.md).) Note that `PAYMENT` webhooks now report the payment-level terminal status (`COMPLETED` / `DECLINED`) rather than card statuses like `CAPTURED` or `AUTH_REQUESTED`.
-4. **Add** a `WALLET_TRANSFER` webhook and use it to trigger reconciliation.
-5. **Switch reads** to `GET /payment/{id}` / `GET /payment` — these return the payment with its `attempts` array. (Payments created through the removed direct endpoints are no longer readable via the API.)
-6. **Base settlement and reconciliation on `walletTransferAmount`**, not on the payment amount.
-7. **Keep your card whitelisting** integration — cards must still be whitelisted (and clear the cooldown) before the customer pays on the HPP. See [Card Whitelisting](#card-whitelisting).
-8. Verify the full flow in sandbox using the checklist in [Testing](#testing) before going live.

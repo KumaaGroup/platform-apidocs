@@ -1,6 +1,6 @@
 # Card Payments
 
-Cards can be charged in two ways. Which of them is available to you depends on your engagement with the platform and on your merchant account configuration — for example, some merchants are contracted for crypto (tokenized) payments through the hosted page only — so check with the platform team before building:
+Cards can be charged in two ways. Which of them is available to you depends on your engagement with the platform, your merchant account configuration and your PCI DSS scope — if unsure, ask the platform administrators before building:
 
 |                       | Hosted Payments Page                                                                                              | Server-to-server                                                       |
 |-----------------------|-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
@@ -11,8 +11,6 @@ Cards can be charged in two ways. Which of them is available to you depends on y
 | Create response       | `actionUrl` to send the customer to                                                                               | `id` and `externalId` only — the outcome arrives by webhook            |
 
 > **Availability:** `POST /payment/card/create` is published ahead of its processing rollout so you can build your integration against the final contract. Until the endpoint is enabled for your merchant account, calls are rejected (currently with `501 Not Implemented`). Contact the platform team to be enabled.
-
-> **Removed endpoints (2026-09):** the first-generation direct endpoints — `POST /payment`, `POST /payment/batch`, `POST /payment/crypto` (first generation), `POST /payment/google-pay`, `POST /payment/apple-pay`, and `POST /payment/{id}/refund` — have been **removed** and return `404`. `POST /payment/card/create` is the successor of `POST /payment` with a flatter request shape — see [Migrating from POST /payment](#migrating-from-post-payment). Disbursements use [`POST /push-to-card/initialize`](#push-to-card).
 
 This page covers the server-to-server endpoint and the card-side mechanics shared by every card payment: the card attempt lifecycle, 3D Secure handling, push-to-card disbursements, and the sandbox test cards.
 
@@ -166,22 +164,6 @@ Redirect the customer's browser to the `actionUrl`. The platform takes the custo
 
 Payments that do not need a challenge skip this step entirely and go straight to the terminal notification.
 
-### Migrating from POST /payment
-
-`POST /payment/card/create` replaces the removed `POST /payment` with the same card and billing-address objects but a flatter top level:
-
-| `POST /payment` (removed)         | `POST /payment/card/create`                                        |
-|-----------------------------------|--------------------------------------------------------------------|
-| `customer.email` / `firstName` / `lastName` | `customerEmail` / `customerFirstName` / `customerLastName`  |
-| `customer.billingAddress`         | `billingAddress` (top level; `state` is now optional)              |
-| `customer.phone`                  | `phone` (top level)                                                |
-| `customerIp` optional             | `customerIp` **required**                                          |
-| Response carried `status: REQUESTED` | Response carries `id` and `externalId` only                     |
-| Webhook status = card status (`AUTH_REQUESTED`, `AUTHORIZED`, `CAPTURED`, …) | Webhook status = payment status (`COMPLETED` / `DECLINED`), plus one notification with `actionUrl` when 3DS is required |
-| `POST /payment/{id}/refund`       | [`POST /payment/{id}/refund/initialize`](refunds.md)               |
-
-Card whitelisting, test cards and the 3DS `responseCode` values are unchanged.
-
 ## Card Attempt Lifecycle
 
 However the card is charged — on the hosted payments page or via `POST /payment/card/create` — the card charge is recorded as an **attempt** inside the payment, visible in the `attempts` array of [`GET /payment/{id}`](crypto-payments.md#payment-records-and-attempts). The payment itself moves through the top-level [payment lifecycle](crypto-payments.md#payment-lifecycle) (`INITIALIZED → PENDING → COMPLETED / DECLINED`; a server-to-server card payment starts processing immediately, so it does not wait in `INITIALIZED` for the customer); each card attempt has its own sub-lifecycle:
@@ -229,8 +211,6 @@ There is no dedicated status for 3DS failure or 3DS expiry. When a 3DS challenge
 Both values arrive together with `status: DECLINED`, on the same `PAYMENT` webhook that signals the decline (and on `GET /payment/{id}`). To recognise a 3DS-related decline programmatically, check `status == DECLINED` **and** `responseCode in {THREE_DS_FAILED, THREE_DS_EXPIRED}`. The customer can usually retry with a new payment attempt.
 
 ## Push-to-Card
-
-> **Removed endpoint:** `POST /payment/ptc` no longer exists. Use `POST /push-to-card/initialize` — same request shape — and read disbursements back via `GET /push-to-card/payment` / `GET /push-to-card/payment/{id}`.
 
 ```mermaid
 sequenceDiagram

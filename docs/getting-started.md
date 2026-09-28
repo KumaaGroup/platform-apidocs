@@ -108,8 +108,6 @@ Response:
 
 Redirect your customer to the `actionUrl` (valid for 15 minutes). The full flow — including the wallet top-up step — is described in [Crypto Payments](crypto-payments.md).
 
-> **Removed:** the direct card endpoints (`POST /payment`, `POST /payment/batch`, `POST /payment/crypto`, `POST /payment/google-pay`, `POST /payment/apple-pay`, `POST /payment/ptc`) and the open banking endpoints have been **removed** and return `404`. Payments go through the initialize flow above or [`POST /payment/card/create`](card-payments.md#server-to-server-card-payment); disbursements use [`POST /push-to-card/initialize`](card-payments.md#push-to-card).
-
 ### 4. Check the payment
 
 ```bash

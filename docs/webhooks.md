@@ -2,8 +2,6 @@
 
 Webhooks notify your server in real time when events occur — such as a payment being completed or a refund finishing. Instead of polling the API, you register a URL and the platform sends HTTP POST requests to it whenever a relevant event happens.
 
-> **Event types renamed (2026-08):** the webhook event types have been restructured. `CARD_PAYMENT` was renamed to `PAYMENT` — existing `CARD_PAYMENT` webhooks were migrated automatically and keep delivering. The `OPEN_BANKING` event type was **removed and its webhooks deleted** (open banking itself has since been removed from the API). Refunds, chargebacks, and push-to-card disbursements now have their own event types (`REFUND`, `CHARGEBACK`, `PUSH_TO_CARD`) instead of riding `CARD_PAYMENT` — create a webhook per event type you consume.
-
 ## Why Webhooks Are Essential
 
 The Platform Merchants API is **asynchronous** in many scenarios. When you initialize a payment, the initial response confirms the request was accepted, but the final outcome (completed, declined, etc.) is determined later while the customer pays on the hosted page. A [server-to-server card payment](card-payments.md#server-to-server-card-payment) goes further: its create response carries no status at all, and even the 3D Secure redirect URL reaches you only by webhook. The same applies to refunds, disbursements, and other operations.

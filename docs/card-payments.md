@@ -1,6 +1,6 @@
 # Card Payments
 
-Cards can be charged in two ways. Which of them is available to you depends on your engagement with the platform, your merchant account configuration and your PCI DSS scope — if unsure, ask the platform administrators before building:
+Cards can be charged in various ways. Which of them are available to you depends on your engagement with the platform, your merchant account configuration and your PCI DSS scope — if unsure, ask the platform administrators before building:
 
 |                       | Hosted Payments Page                                                                                              | Server-to-server                                                       |
 |-----------------------|-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|

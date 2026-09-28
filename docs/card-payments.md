@@ -1,6 +1,6 @@
 # Card Payments
 
-Cards can be charged in two ways. Pick the one that matches your PCI DSS scope:
+Cards can be charged in two ways. Which of them is available to you depends on your engagement with the platform and on your merchant account configuration — for example, some merchants are contracted for crypto (tokenized) payments through the hosted page only — so check with the platform team before building:
 
 |                       | Hosted Payments Page                                                                                              | Server-to-server                                                       |
 |-----------------------|-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
@@ -22,7 +22,7 @@ Depending on your merchant account configuration, cards may need to be [whitelis
 
 ## Server-to-Server Card Payment
 
-> **PCI DSS:** with this endpoint your systems collect and transmit cardholder data. Use it only if your organisation is PCI DSS certified for that scope — otherwise use the hosted payments page. Never log or persist the card number or CVC on your side.
+> **PCI DSS:** with this endpoint your systems collect and transmit cardholder data. It is enabled per merchant account and only for organisations that are PCI DSS certified for that scope — otherwise use the hosted payments page. Never log or persist the card number or CVC on your side.
 
 ```mermaid
 sequenceDiagram

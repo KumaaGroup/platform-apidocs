@@ -8,7 +8,7 @@ Because your systems never collect, transmit, or store card data, your **PCI DSS
 
 Card whitelisting works exactly as before — cards must be whitelisted before they can be used (see [Card Whitelisting](#card-whitelisting) below).
 
-> **Sibling flows:** [Fiat Payments](fiat-payments.md) uses the same initialize contract and hosted page without the crypto wallet top-up step. Merchants that are PCI DSS certified to handle cardholder data can instead submit card details directly with [`POST /payment/card/create`](card-payments.md#server-to-server-card-payment), skipping the hosted page. Both are rolled out per merchant account.
+> **Sibling flows:** [Fiat Payments](fiat-payments.md) uses the same initialize contract and hosted page without the crypto wallet top-up step. Where enabled for a merchant account (and the merchant is PCI DSS certified to handle cardholder data), card details can instead be submitted directly with [`POST /payment/card/create`](card-payments.md#server-to-server-card-payment), skipping the hosted page. Which flows are available depends on your engagement and account configuration.
 
 ## How It Works
 

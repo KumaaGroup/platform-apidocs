@@ -104,7 +104,7 @@ Requests with any other currency code are rejected with `400 Bad Request`.
   "id": "pay_550e8400-e29b-41d4-a716-446655440000",
   "externalId": "order-001",
   "status": "INITIALIZED",
-  "actionUrl": "https://sandbox-topup.nonprod.kumaacrypto.com/cryptopublic/payments/page/eyJhbGciOi..."
+  "actionUrl": "https://sandbox-topup.nonprod.kumaacrypto.com/?token=eyJhbGciOi..."
 }
 ```
 
@@ -191,7 +191,7 @@ The response contains the top-level payment (status, amounts, redirect URLs, wal
   "amount": 29.99,
   "successUrl": "https://your-shop.com/checkout/success",
   "failureUrl": "https://your-shop.com/checkout/failure",
-  "actionUrl": "https://sandbox-topup.nonprod.kumaacrypto.com/cryptopublic/payments/page/eyJhbGciOi...",
+  "actionUrl": "https://sandbox-topup.nonprod.kumaacrypto.com/?token=eyJhbGciOi...",
   "attempts": [
     {
       "method": "CARD",

@@ -102,7 +102,7 @@ Response:
   "id": "pay_abc123",
   "externalId": "order-001",
   "status": "INITIALIZED",
-  "actionUrl": "https://sandbox-topup.nonprod.kumaacrypto.com/cryptopublic/payments/page/eyJhbGciOi..."
+  "actionUrl": "https://sandbox-topup.nonprod.kumaacrypto.com/?token=eyJhbGciOi..."
 }
 ```
 

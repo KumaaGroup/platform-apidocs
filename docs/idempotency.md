@@ -39,6 +39,7 @@ The `externalId` is required on the following endpoints:
 |----------------------------------------|----------------------------------------|
 | `POST /payment/crypto/initialize`      | Initialize a crypto payment            |
 | `POST /payment/fiat/initialize`        | Initialize a fiat payment              |
+| `POST /payment/card/create`            | Create a server-to-server card payment |
 | `POST /payment/{id}/refund/initialize` | Request a refund                       |
 | `POST /push-to-card/initialize`        | Create a push-to-card disbursement     |
 

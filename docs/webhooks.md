@@ -6,7 +6,7 @@ Webhooks notify your server in real time when events occur — such as a payment
 
 ## Why Webhooks Are Essential
 
-The Platform Merchants API is **asynchronous** in many scenarios. When you initialize a payment, the initial response confirms the request was accepted, but the final outcome (completed, declined, etc.) is determined later while the customer pays on the hosted page. The same applies to refunds, disbursements, and other operations.
+The Platform Merchants API is **asynchronous** in many scenarios. When you initialize a payment, the initial response confirms the request was accepted, but the final outcome (completed, declined, etc.) is determined later while the customer pays on the hosted page. A [server-to-server card payment](card-payments.md#server-to-server-card-payment) goes further: its create response carries no status at all, and even the 3D Secure redirect URL reaches you only by webhook. The same applies to refunds, disbursements, and other operations.
 
 **Webhook configuration is required** to reliably know when a payment has been captured or declined. Without webhooks, you would need to continuously poll the API for status changes, which is inefficient and may miss time-sensitive updates.
 
@@ -69,11 +69,36 @@ You can attach up to 5 custom headers to each webhook. These are included in eve
 - Only **one webhook per event type** per merchant. If you need to handle several event types (e.g. payments and refunds), create a separate webhook for each.
 - The URL **must use HTTPS**. Plain HTTP endpoints are rejected.
 
+## Notification Payload
+
+Every notification is an HTTP POST with a JSON body of the same shape, whatever the event type:
+
+```json
+{
+  "objectId": "pay_550e8400-e29b-41d4-a716-446655440000",
+  "externalId": "order-001",
+  "eventType": "PAYMENT",
+  "status": "DECLINED",
+  "responseCode": "THREE_DS_FAILED",
+  "timestamp": "2026-09-28T10:07:00Z"
+}
+```
+
+| Field          | Type   | Present  | Description                                                                                     |
+|----------------|--------|----------|-------------------------------------------------------------------------------------------------|
+| `objectId`     | string | Always   | ID of the object the event is about — a payment, refund, chargeback or disbursement ID          |
+| `externalId`   | string | Always   | The `externalId` you supplied when creating the object                                          |
+| `eventType`    | string | Always   | One of the [event types](#event-types) below                                                    |
+| `status`       | string | Always   | Current status of the object — see [Webhook Object Statuses](#webhook-object-statuses)          |
+| `responseCode` | string | Declines | Reason code clarifying a `DECLINED` / `REJECTED` status                                         |
+| `actionUrl`    | string | 3DS only | URL to redirect the customer to for a 3D Secure challenge. Sent only for [server-to-server card payments](card-payments.md#handling-3d-secure), and only in the notification issued while the card attempt is `AUTH_REQUESTED` |
+| `timestamp`    | string | Always   | When the notification was generated (RFC 3339)                                                  |
+
 ## Event Types
 
 | Event Type        | Triggered When                                          |
 |-------------------|---------------------------------------------------------|
-| `PAYMENT`         | A payment created via the [initialize flow](crypto-payments.md) reaches a terminal status — `COMPLETED` or `DECLINED` (with a `responseCode` for declines) |
+| `PAYMENT`         | A payment created via the [initialize flow](crypto-payments.md) or [`POST /payment/card/create`](card-payments.md#server-to-server-card-payment) reaches a terminal status — `COMPLETED` or `DECLINED` (with a `responseCode` for declines). For server-to-server card payments, additionally when the issuer requires a 3D Secure challenge — the payload then carries an `actionUrl` |
 | `REFUND`          | A **refund** reaches a terminal status (`COMPLETED`, `DECLINED`, `REJECTED`) — see [Refunds — Webhook Notifications](refunds.md#webhook-notifications) |
 | `CHARGEBACK`      | A **chargeback** recorded against one of your payments is processed — see [Chargebacks](refunds.md#chargebacks) |
 | `PUSH_TO_CARD`    | A [push-to-card disbursement](card-payments.md#push-to-card) status changes |
@@ -83,7 +108,7 @@ You can attach up to 5 custom headers to each webhook. These are included in eve
 
 The `status` field in the payload reflects the current state of the underlying object. The exact set of values depends on the event type; see the per-object lifecycle docs for the full state machines:
 
-- `PAYMENT` — [Payment Lifecycle](crypto-payments.md#payment-lifecycle); the webhook fires only on the terminal statuses `COMPLETED` and `DECLINED` (intermediate statuses, including the card attempt's own [sub-lifecycle](card-payments.md#card-attempt-lifecycle) transitions such as `AUTH_REQUESTED`, do not trigger notifications)
+- `PAYMENT` — [Payment Lifecycle](crypto-payments.md#payment-lifecycle); the webhook fires on the terminal statuses `COMPLETED` and `DECLINED`. Intermediate statuses, including the card attempt's own [sub-lifecycle](card-payments.md#card-attempt-lifecycle) transitions, do not trigger notifications — with one exception: a server-to-server card payment whose attempt reaches `AUTH_REQUESTED` triggers a notification carrying the 3DS `actionUrl` (see [Handling 3D Secure](card-payments.md#handling-3d-secure))
 - `REFUND` / `CHARGEBACK` — [Refund Lifecycle](refunds.md#refund-lifecycle) / [Chargebacks](refunds.md#chargebacks)
 - `PUSH_TO_CARD` — [Push-to-Card Lifecycle](card-payments.md#push-to-card-lifecycle)
 

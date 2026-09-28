@@ -77,7 +77,7 @@ Card whitelisting is **mandatory**: register each card and allow approximately 7
 
 ### 3. Initialize a payment
 
-Use the access token to initialize a payment. You never collect card data yourself — the response contains an `actionUrl` for the hosted payments page where your customer completes the payment.
+Use the access token to initialize a payment. You never collect card data yourself — the response contains an `actionUrl` for the hosted payments page where your customer completes the payment. (Merchants certified to handle cardholder data can instead submit the card directly — see [Server-to-Server Card Payment](card-payments.md#server-to-server-card-payment).)
 
 ```bash
 curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/crypto/initialize \
@@ -108,7 +108,7 @@ Response:
 
 Redirect your customer to the `actionUrl` (valid for 15 minutes). The full flow — including the wallet top-up step — is described in [Crypto Payments](crypto-payments.md).
 
-> **Removed:** the direct card endpoints (`POST /payment`, `POST /payment/batch`, `POST /payment/crypto`, `POST /payment/google-pay`, `POST /payment/apple-pay`, `POST /payment/ptc`) and the open banking endpoints have been **removed** and return `404`. All payments go through the initialize flow above; disbursements use [`POST /push-to-card/initialize`](card-payments.md#push-to-card).
+> **Removed:** the direct card endpoints (`POST /payment`, `POST /payment/batch`, `POST /payment/crypto`, `POST /payment/google-pay`, `POST /payment/apple-pay`, `POST /payment/ptc`) and the open banking endpoints have been **removed** and return `404`. Payments go through the initialize flow above or [`POST /payment/card/create`](card-payments.md#server-to-server-card-payment); disbursements use [`POST /push-to-card/initialize`](card-payments.md#push-to-card).
 
 ### 4. Check the payment
 

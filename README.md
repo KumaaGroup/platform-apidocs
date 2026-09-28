@@ -4,7 +4,7 @@ description: Start here. Quick start path, core concepts, and links to key guide
 
 # Platform Merchants API
 
-Use the Merchants API to accept payments through the hosted payments page, issue refunds, initiate open banking transfers, and receive event notifications via webhooks. **KumaaGuard partners** — a separate role with its own credentials — use the API to risk-score payments before processing them; see [KumaaGuard](docs/kumaaguard.md).
+Use the Merchants API to accept payments through the hosted payments page or server-to-server, issue refunds, initiate open banking transfers, and receive event notifications via webhooks. **KumaaGuard partners** — a separate role with its own credentials — use the API to risk-score payments before processing them; see [KumaaGuard](docs/kumaaguard.md).
 
 ### Key guides
 

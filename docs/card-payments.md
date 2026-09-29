@@ -18,7 +18,7 @@ Depending on your merchant account configuration, cards may need to be [whitelis
 
 ## Card Attempt Lifecycle
 
-However the card is charged — on the hosted payments page or via `POST /payment/card/create` — the card charge is recorded as an **attempt** inside the payment, visible in the `attempts` array of [`GET /payment/{id}`](crypto-payments.md#payment-records-and-attempts). The payment itself moves through the top-level [payment lifecycle](crypto-payments.md#payment-lifecycle) (`INITIALIZED → PENDING → COMPLETED / DECLINED`; a server-to-server card payment starts processing immediately, so it does not wait in `INITIALIZED` for the customer); each card attempt has its own sub-lifecycle:
+However the card is charged — on the hosted payments page or via `POST /payment/card/create` — the card charge is recorded as an **attempt** inside the payment, visible in the `attempts` array of [`GET /payment/{id}`](crypto-payments.md#payment-records-and-attempts). The payment itself moves through the top-level [payment lifecycle](crypto-payments.md#payment-lifecycle) (`INITIALIZED → PENDING → COMPLETED / DECLINED`; a server-to-server card payment is created already `PENDING` — see its [status progression](server-to-server-card-payments.md#status-progression)); each card attempt has its own sub-lifecycle:
 
 ```mermaid
 stateDiagram-v2
@@ -42,7 +42,7 @@ stateDiagram-v2
 | `CAPTURED`       | Funds captured from the card (terminal, success)                             |
 | `DECLINED`       | Attempt declined by the issuer or platform (terminal). For 3DS-specific declines, inspect `responseCode` (see [3DS failure outcomes](#id-3ds-failure-outcomes)). |
 
-A captured attempt completes the payment (`status: COMPLETED`). On the hosted page a declined attempt can be followed by another attempt while the session is still valid; a declined server-to-server payment is final — create a new payment with a new `externalId` to retry. The [`PAYMENT` webhook](webhooks.md) reports the **payment-level** outcome (`COMPLETED` or `DECLINED`), not the individual attempt transitions (the one exception is the server-to-server [3DS notification](server-to-server-card-payments.md#handling-3d-secure)) — poll `GET /payment/{id}` if you need attempt-level detail.
+A captured attempt completes the payment (`status: COMPLETED`). On the hosted page a declined attempt can be followed by another attempt while the session is still valid; a declined server-to-server payment is final — create a new payment with a new `externalId` to retry. The [`PAYMENT` webhook](webhooks.md) reports the **payment-level** outcome (`COMPLETED` or `DECLINED`), not the individual attempt transitions (the one exception is the server-to-server `AUTH_REQUESTED` [3DS notification](server-to-server-card-payments.md#handling-3d-secure)) — poll `GET /payment/{id}` if you need attempt-level detail.
 
 ## 3D Secure (3DS)
 

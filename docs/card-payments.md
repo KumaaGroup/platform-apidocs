@@ -70,15 +70,15 @@ Use the following test cards in the **sandbox** environment, on the hosted payme
 
 ### How test cards work
 
-Each row is one scenario. Submit the card number as shown; where a row says *any*, the field is not checked, so use any future expiry, any cardholder name and a CVC of the card brand's length.
+Each row is one scenario. Submit the card number as shown with any future expiry and a CVC of the card brand's length; where the cardholder name says *any*, it is not checked.
 
-| Card number        | Expiry | Cardholder name | Simulated outcome                                                     |
-|--------------------|--------|-----------------|-----------------------------------------------------------------------|
-| `4111111111111111` | any    | any             | Approved                                                              |
-| `4462030000000000` | any    | any             | Approved, subject to your account's card whitelist and velocity rules |
-| `4111111111111105` | any    | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
-| `4111111111111143` | any    | any             | Declined, `responseCode` `STOLEN_CARD`                                |
-| `4111111111111151` | any    | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
+| Card number        | Cardholder name | Simulated outcome                                                     |
+|--------------------|-----------------|-----------------------------------------------------------------------|
+| `4111111111111111` | any             | Approved                                                              |
+| `4462030000000000` | any             | Approved, subject to your account's card whitelist and velocity rules |
+| `4111111111111105` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
+| `4111111111111143` | any             | Declined, `responseCode` `STOLEN_CARD`                                |
+| `4111111111111151` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
 
 - Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exception is the row marked as subject to those rules: use it to test the whitelist API and the behaviour of a blocked card.
 - The outcome shown holds for the cards enabled on your account; the other listed cards are accepted but may be declined. Your onboarding contact confirms the set for your account.

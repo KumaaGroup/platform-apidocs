@@ -84,7 +84,8 @@ Each row is one scenario. Submit the card number as shown; where a row says *any
 | `4734868958733862` | any    | any             | Declined, CVC check failed                                            |
 | `4897453568485113` | any    | any             | Declined, suspected fraud                                             |
 | `4818924250131070` | any    | any             | Declined, restricted card                                             |
-| `4000000000002701` | any    | `AUTHORISED`    | Approved, subject to your account's card whitelist and velocity rules |
+| `4000000000002701` | any    | `AUTHORISED`    | Approved                                                              |
+| `4000000000004970` | any    | `AUTHORISED`    | Approved, subject to your account's card whitelist and velocity rules |
 | `4000000000002701` | any    | `REFUSED`       | Declined, refused by issuer                                           |
 | `4000000000002701` | any    | `REFUSED51`     | Declined, limit exceeded                                              |
 | `4000000000002701` | any    | `REFUSED43`     | Declined, stolen card                                                 |

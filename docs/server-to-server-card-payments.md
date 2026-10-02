@@ -82,7 +82,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/card/
 | `failureUrl`        | string  | Yes      | Where the customer lands after a failed 3D Secure challenge                                   |
 | `metadata`          | string  | No       | Free-form metadata for your own reference                                                     |
 
-`successUrl` and `failureUrl` are required even though they are only used when the issuer requires a 3DS challenge — without a challenge the customer never leaves your checkout. Requests are validated in full before anything is processed: a malformed field, an unsupported currency, or (in sandbox) a card that does not match a [test card](card-payments.md#testing) is rejected with `400`.
+`successUrl` and `failureUrl` are required even though they are only used when the issuer requires a 3DS challenge — without a challenge the customer never leaves your checkout. Requests are validated in full before anything is processed: a malformed field, an unsupported currency, or (in sandbox) a card that is not one of the [test cards](card-payments.md#testing) is rejected with `400`.
 
 ## Billing Address
 
@@ -184,4 +184,4 @@ Redirect the customer's browser to the `actionUrl`. The platform takes the custo
 
 ## Testing
 
-Use the sandbox [test cards](card-payments.md#testing) — card number, expiry and cardholder name must match a listed row exactly, or the request is rejected with `400`. Only synthetic data may be used in sandbox.
+Use the sandbox [test cards](card-payments.md#testing); any other card number is rejected with `400`. Only synthetic data may be used in sandbox.

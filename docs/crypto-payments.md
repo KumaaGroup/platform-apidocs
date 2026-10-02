@@ -305,7 +305,7 @@ All errors follow the standard [error format](error-handling.md). Specific to th
 
 ## Testing
 
-The sandbox hosted page accepts the standard [test cards](card-payments.md#testing), including the 3DS challenge cards.
+The sandbox hosted page accepts the standard [test cards](card-payments.md#testing).
 
 > **Warning:** Only **synthetic (fictitious) data** may be used in the sandbox environment. Real PII or cardholder data is strictly forbidden.
 

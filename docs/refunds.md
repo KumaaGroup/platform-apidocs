@@ -131,7 +131,7 @@ For `DECLINED` refunds, the `responseCode` field carries the decline reason. See
 
 ## Chargebacks
 
-A chargeback is initiated by the customer's bank, not by you — there is no endpoint to create one. When the acquirer reports a chargeback against one of your payments, the platform records it as a payment of **type `CHARGEBACK`**:
+A chargeback is initiated by the customer's bank, not by you — there is no endpoint to create one. When a chargeback is raised against one of your payments, the platform records it as a payment of **type `CHARGEBACK`**:
 
 - Read it back with `GET /payment/{id}` (or find it via `GET /payment`). Like a refund, it carries a `parentPaymentId` linking to the original payment and a `details` object with the chargeback's own status, amount, masked card, `responseCode`, and timestamps.
 - The original payment's `amountRefunded` field accumulates charged-back amounts together with refunds.

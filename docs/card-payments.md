@@ -66,7 +66,7 @@ Both values arrive together with `status: DECLINED`, on the same `PAYMENT` webho
 
 > **Warning:** Only **synthetic (fictitious) data** may be used in the sandbox environment. The use of real personally identifiable information (PII) or real cardholder data (CHD) is **strictly forbidden**.
 
-Use the following test cards in the **sandbox** environment, on the hosted payments page or in `POST /payment/card/create`, to simulate payment outcomes. Any other card number is rejected with `400 Bad Request: "card is not valid for test payments"` before a payment is created (on the hosted page this is shown to the customer; on `POST /payment/card/create` it is the HTTP response).
+Use the following test cards in the **sandbox** environment, on the hosted payments page or in `POST /payment/card/create`, to simulate payment outcomes. Any card not in this table is rejected with `400 Bad Request: "card is not valid for test payments"` before a payment is created (on the hosted page this is shown to the customer; on `POST /payment/card/create` it is the HTTP response).
 
 ### How test cards work
 
@@ -92,6 +92,6 @@ Each row is one scenario. Submit the card number as shown; where a row says *any
 | `4000000000002701` | any    | `REFUSED34`     | Declined, fraud suspicion                                             |
 
 - Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
-- Which test cards are enabled for your account follows its configuration; your onboarding contact confirms the set.
+- The outcome shown holds for the cards enabled on your account; the other listed cards are accepted but may be declined. Your onboarding contact confirms the set for your account.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.

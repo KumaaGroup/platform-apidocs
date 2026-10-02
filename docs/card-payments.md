@@ -25,7 +25,7 @@ stateDiagram-v2
     [*] --> REQUESTED
     REQUESTED --> AUTH_REQUESTED: 3DS challenge required
     REQUESTED --> AUTHORIZED: no 3DS, authorized
-    REQUESTED --> DECLINED: validation failed or no acquirer
+    REQUESTED --> DECLINED: validation failed or declined before processing
     AUTH_REQUESTED --> AUTHORIZED: 3DS approved
     AUTH_REQUESTED --> DECLINED: 3DS failed / blocked / timed out
     AUTHORIZED --> CAPTURED
@@ -66,28 +66,21 @@ Both values arrive together with `status: DECLINED`, on the same `PAYMENT` webho
 
 > **Warning:** Only **synthetic (fictitious) data** may be used in the sandbox environment. The use of real personally identifiable information (PII) or real cardholder data (CHD) is **strictly forbidden**.
 
-Use the following test cards in the **sandbox** environment — on the hosted payments page or in `POST /payment/card/create` — to simulate different payment outcomes.
+Use the following test cards in the **sandbox** environment, on the hosted payments page or in `POST /payment/card/create`, to simulate payment outcomes. Any other card number is rejected with `400 Bad Request: "card is not valid for test payments"` before a payment is created (on the hosted page this is shown to the customer; on `POST /payment/card/create` it is the HTTP response).
 
 ### How test cards work
 
-Each row in the tables below represents a single test scenario with a deterministic outcome. To trigger that outcome, you must submit the payment using **all three fields exactly as shown**: card number, expiry date, and cardholder name. If any field does not match, the submission is rejected with `400 Bad Request: "card is not valid for test payments"` before any payment processing occurs (on the hosted page this is shown to the customer; on `POST /payment/card/create` it is the HTTP response).
+Each row is one scenario. Submit the card number as shown; where a row says *any*, the field is not checked, so use any future expiry, any cardholder name and any 3-digit CVC.
 
-- Cardholder name matching is **case-insensitive** — `"jane smith"` and `"JANE SMITH"` both match `Jane Smith`.
-- The CVC field accepts any 3-digit value (e.g. `123`).
+| Card number        | Expiry | Cardholder name | Simulated outcome                                                     |
+|--------------------|--------|-----------------|-----------------------------------------------------------------------|
+| `4111111111111111` | any    | any             | Approved                                                              |
+| `4462030000000000` | any    | any             | Approved, subject to your account's card whitelist and velocity rules |
+| `4111111111111105` | any    | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
+| `4111111111111143` | any    | any             | Declined, `responseCode` `STOLEN_CARD`                                |
+| `4111111111111151` | any    | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
+
+- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The one exception is `4462030000000000`, which keeps both rules: use it to test the whitelist API and the behaviour of a blocked card.
+- Which test cards are enabled for your account follows its configuration; your onboarding contact confirms the set.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.
-
-### Visa — Approved
-
-| Card Number          | Expiry    | Cardholder        | Notes                 |
-|----------------------|-----------|-------------------|-----------------------|
-| `4462030000000000`   | `01/2035` | `John Smith`      |                          |
-| `4111111111111111`   | `01/2035` | `Jane Smith`      |                          |
-
-### Visa — Declined
-
-| Card Number          | Expiry    | Cardholder   | Reason             |
-|----------------------|-----------|--------------|--------------------|
-| `4111111111111105`   | `01/2035` | `Jane Smith` | Do not honor       |
-| `4111111111111143`   | `01/2035` | `Jane Smith` | Stolen card        |
-| `4111111111111151`   | `01/2035` | `Jane Smith` | Insufficient funds |

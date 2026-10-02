@@ -121,7 +121,7 @@ For `4xx` errors, do **not** retry — fix the request first. The exception is `
 
 ### Invalid test card (400)
 
-Sandbox payments must use the [published test cards](card-payments.md#testing) with all fields matching exactly:
+Sandbox payments must use the [published test cards](card-payments.md#testing):
 
 ```json
 {

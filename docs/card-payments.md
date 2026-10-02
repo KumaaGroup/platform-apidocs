@@ -70,7 +70,7 @@ Use the following test cards in the **sandbox** environment, on the hosted payme
 
 ### How test cards work
 
-Each row is one scenario. Submit the card number as shown; where a row says *any*, the field is not checked, so use any future expiry, any cardholder name and a CVC of the card brand's length. Where a cardholder name is given, it must match (case does not matter).
+Each row is one scenario. Submit the card number as shown; where a row says *any*, the field is not checked, so use any future expiry, any cardholder name and a CVC of the card brand's length.
 
 | Card number        | Expiry | Cardholder name | Simulated outcome                                                     |
 |--------------------|--------|-----------------|-----------------------------------------------------------------------|
@@ -79,19 +79,8 @@ Each row is one scenario. Submit the card number as shown; where a row says *any
 | `4111111111111105` | any    | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
 | `4111111111111143` | any    | any             | Declined, `responseCode` `STOLEN_CARD`                                |
 | `4111111111111151` | any    | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
-| `4000020000000000` | any    | any             | Approved                                                              |
-| `4544249167673670` | any    | any             | Declined, insufficient funds                                          |
-| `4734868958733862` | any    | any             | Declined, CVC check failed                                            |
-| `4897453568485113` | any    | any             | Declined, suspected fraud                                             |
-| `4818924250131070` | any    | any             | Declined, restricted card                                             |
-| `4000000000002701` | any    | `AUTHORISED`    | Approved                                                              |
-| `4000000000004970` | any    | `AUTHORISED`    | Approved, subject to your account's card whitelist and velocity rules |
-| `4000000000002701` | any    | `REFUSED`       | Declined, refused by issuer                                           |
-| `4000000000002701` | any    | `REFUSED51`     | Declined, limit exceeded                                              |
-| `4000000000002701` | any    | `REFUSED43`     | Declined, stolen card                                                 |
-| `4000000000002701` | any    | `REFUSED34`     | Declined, fraud suspicion                                             |
 
-- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
+- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exception is the row marked as subject to those rules: use it to test the whitelist API and the behaviour of a blocked card.
 - The outcome shown holds for the cards enabled on your account; the other listed cards are accepted but may be declined. Your onboarding contact confirms the set for your account.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.

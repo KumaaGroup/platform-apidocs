@@ -196,7 +196,7 @@ The response contains the top-level payment (status, amounts, redirect URLs, wal
         "status": "CAPTURED",
         "amount": 29.99,
         "currency": "EUR",
-        "card": { "binCode": "411111", "last4": "1111", "issuer": "VISA" },
+        "cardData": { "binCode": "411111", "last4": "1111", "issuer": "VISA" },
         "createdAt": "2026-08-17T10:05:00Z",
         "updatedAt": "2026-08-17T10:06:10Z"
       }

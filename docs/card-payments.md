@@ -88,6 +88,6 @@ Each row is one scenario. Submit the card number as shown with any future expiry
 | `4000000000000150` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
 
 - Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
-- The outcome shown holds for the cards enabled on your account; the other listed cards are accepted but may be declined. Your onboarding contact confirms the set for your account.
+- Not every listed card is enabled on every account. A card that is not enabled on yours is rejected with `400 Bad Request: "test card is not enabled for this merchant, use another test card from the API docs"` before a payment is created, like a card that is not in the table: pick another row with the same outcome. Your onboarding contact confirms the set for your account.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.

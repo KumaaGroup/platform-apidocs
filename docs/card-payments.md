@@ -72,15 +72,22 @@ Use the following test cards in the **sandbox** environment, on the hosted payme
 
 Each row is one scenario. Submit the card number as shown with any future expiry and a CVC of the card brand's length; where the cardholder name says *any*, it is not checked.
 
-| Card number        | Cardholder name | Simulated outcome                                                     |
-|--------------------|-----------------|-----------------------------------------------------------------------|
-| `4111111111111111` | any             | Approved                                                              |
-| `4462030000000000` | any             | Approved, subject to your account's card whitelist and velocity rules |
-| `4111111111111105` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
-| `4111111111111143` | any             | Declined, `responseCode` `STOLEN_CARD`                                |
-| `4111111111111151` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
+| Card number        | Cardholder name | Simulated outcome                                                                                           |
+|--------------------|-----------------|-------------------------------------------------------------------------------------------------------------|
+| `4111111111111111` | any             | Approved                                                                                                    |
+| `4000000000000168` | any             | Approved without 3DS                                                                                        |
+| `4000000000000119` | any             | Approved after a 3DS challenge                                                                              |
+| `4462030000000000` | any             | Approved, subject to your account's card whitelist and velocity rules                                       |
+| `4000000000000101` | any             | Approved after frictionless 3DS (no challenge), subject to your account's card whitelist and velocity rules |
+| `4111111111111105` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                                                                    |
+| `4111111111111143` | any             | Declined, `responseCode` `STOLEN_CARD`                                                                      |
+| `4111111111111151` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                                                               |
+| `4000000000000127` | any             | Declined, `responseCode` `INVALID_ACCOUNT_NUMBER`                                                           |
+| `4000000000000135` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON`                                                    |
+| `4000000000000143` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
+| `4000000000000150` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
 
-- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exception is the row marked as subject to those rules: use it to test the whitelist API and the behaviour of a blocked card.
+- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
 - The outcome shown holds for the cards enabled on your account; the other listed cards are accepted but may be declined. Your onboarding contact confirms the set for your account.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.

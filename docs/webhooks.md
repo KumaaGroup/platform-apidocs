@@ -100,7 +100,7 @@ Every notification is an HTTP POST with a JSON body of the same shape, whatever 
 | `REFUND`          | A **refund** reaches a terminal status (`COMPLETED`, `DECLINED`, `REJECTED`) — see [Refunds — Webhook Notifications](refunds.md#webhook-notifications) |
 | `CHARGEBACK`      | A **chargeback** recorded against one of your payments is processed — see [Chargebacks](refunds.md#chargebacks) |
 | `PUSH_TO_CARD`    | A [push-to-card disbursement](push-to-card.md) status changes |
-| `WALLET_TRANSFER` | A [Crypto Payment](crypto-payments.md) wallet top-up is captured (`COMPLETED`) or expires unconfirmed (`EXPIRED`) — see [Crypto Payments — Webhooks](crypto-payments.md#webhooks) |
+| `WALLET_TRANSFER` | A [Crypto Payment](crypto-payments.md) customer requests a transfer to your merchant wallet (`COMPLETED`, one notification per payment the transfer covers) — see [Crypto Payments — Webhooks](crypto-payments.md#webhooks) |
 
 ## Webhook Object Statuses
 

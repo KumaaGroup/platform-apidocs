@@ -222,10 +222,11 @@ Each attempt carries a `method` (`CARD` or `BANK_TRANSFER`) and the matching sub
 
 After a successful card payment, the hosted page guides the customer through transferring crypto tokens to **your merchant wallet**. This is the AFT (account funding transaction) step:
 
-- The `customerEmail` you provided identifies the customer's wallet.
-  - **New customer:** a wallet is automatically generated, funded with the equivalent of the payment amount in the payment currency's token.
-  - **Returning customer:** their existing wallet is shown, including any leftover balances from previous payments (balances are read from the public blockchain, which is the source of truth).
-- The customer confirms the transfer to your merchant wallet. The **default is the full available amount** in the payment's currency (current payment plus any leftover balance with you in that currency); the customer may choose to transfer less. Balances in other currencies are displayed but cannot be transferred in this flow.
+- The `customerEmail` you provided identifies the customer's wallet. Every successful card payment funds that wallet with the payment amount in the payment currency's token.
+  - **New customer:** a wallet is automatically generated.
+  - **Returning customer:** their existing wallet is used.
+- The page shows only the balance from the customer's payments made **via your merchant account**: the current payment plus any part of their earlier payments via your account not yet transferred to your merchant wallet. Balances from payments made via other merchants are never shown.
+- The customer confirms the transfer to your merchant wallet. The **default is the full available amount** in the payment's currency (the current payment plus what is left of the customer's earlier payments via your merchant account in that currency); the customer may choose to transfer less. Balances in other currencies are displayed but cannot be transferred in this flow.
 - The customer may also **skip the transfer** and return to your `successUrl`. The amount stays in their wallet and can be transferred to you later.
 - A transfer covers the customer's payments with you **oldest first**: it uses up what is left of their earliest payment before moving on to the next. A transfer larger than the current payment therefore also counts towards earlier payments, and a smaller one may leave part of a payment for a later transfer.
 - Blockchain transactions are executed in grouped batches on a schedule (every 15 minutes): first the customer wallet top-ups, then the transfers to merchant wallets. The on-chain transfer may therefore complete several minutes after the customer confirms it.

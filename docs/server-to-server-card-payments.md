@@ -119,9 +119,9 @@ There is deliberately **no status and no 3DS URL in the response**: a `200` mean
 | 400  | Invalid request (malformed field, unsupported currency, sandbox card not a [test card](card-payments.md#testing))          |
 | 401  | Missing, invalid or expired access token                                                                  |
 | 409  | Duplicate `externalId` (see [Idempotency](idempotency.md))                                                |
-| 422  | Payment cannot be accepted (merchant account not active, server-to-server card payments not enabled for your account, or the customer's IP is in a blocked location) |
+| 422  | Payment cannot be accepted (merchant account not active, or server-to-server card payments not enabled for your account) |
 
-A decline is **not** an HTTP error: the request is accepted with `200` and the decline arrives later as a `PAYMENT` webhook with `status: DECLINED` and a `responseCode` (see [Error Handling](error-handling.md)).
+A decline is **not** an HTTP error: the request is accepted with `200` and the decline arrives later as a `PAYMENT` webhook with `status: DECLINED` and a `responseCode` (see [Error Handling](error-handling.md)). This includes a customer in a country blocked for your account: `responseCode` is `BLOCKED_LOCATION_CUSTOMER_SUPPLIED_IP` when `customerIp` is in that country, or `BLOCKED_LOCATION_BILLING_COUNTRY` when the billing address is.
 
 ## Status Progression
 

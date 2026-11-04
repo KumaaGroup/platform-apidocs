@@ -31,10 +31,14 @@ sequenceDiagram
     end
     API-->>M: Webhook PAYMENT: status=COMPLETED (or DECLINED)
     Note over HPP: Customer wallet created or reused<br/>(identified by customerEmail)
-    C->>HPP: Confirm transfer to merchant wallet (default: full amount)
-    API-->>M: Webhook WALLET_TRANSFER (top-up intent captured)
-    HPP->>C: Redirect to your successUrl / failureUrl
-    M->>API: GET /payment/{id} → walletTransferAmount
+    alt Customer transfers
+        C->>HPP: Confirm transfer to merchant wallet (default: full amount)
+        API-->>M: Webhook WALLET_TRANSFER per payment the transfer covers
+    else Customer skips
+        C->>HPP: Skip the transfer for now
+    end
+    HPP->>C: Redirect to your successUrl
+    M->>API: GET /payment/{id} → walletTransferredAmount
 ```
 
 Your server only ever talks to the Merchants API with your server-to-server (S2S) credentials. The customer's browser only ever talks to the hosted payments page, authenticated by a short-lived token embedded in the URL.
@@ -202,9 +206,8 @@ The response contains the top-level payment (status, amounts, redirect URLs, wal
       }
     }
   ],
-  "walletTransferAmount": 29.99,
-  "walletTransferCurrency": "EUR",
-  "walletTransferStatus": "COMPLETED",
+  "walletTransferTxHashUrls": ["https://<blockchain-explorer>/tx/0x5f1c..."],
+  "walletTransferredAmount": 29.99,
   "createdAt": "2026-08-17T10:04:00Z",
   "updatedAt": "2026-08-17T10:07:00Z",
   "finishedAt": "2026-08-17T10:06:10Z"
@@ -219,15 +222,16 @@ Each attempt carries a `method` (`CARD` or `BANK_TRANSFER`) and the matching sub
 
 After a successful card payment, the hosted page guides the customer through transferring crypto tokens to **your merchant wallet**. This is the AFT (account funding transaction) step:
 
-- The `customerEmail` you provided identifies the customer's wallet.
-  - **New customer:** a wallet is automatically generated, funded with the equivalent of the payment amount in the payment currency's token.
-  - **Returning customer:** their existing wallet is shown, including any leftover balances from previous payments (balances are read from the public blockchain, which is the source of truth).
-- The customer confirms the transfer to your merchant wallet. The **default is the full available amount** in the payment's currency (current payment plus any leftover balance in that currency); the customer may choose to transfer less. Balances in other currencies are displayed but cannot be transferred in this flow.
-- Blockchain transfers are executed in grouped batches on a schedule (every 15 minutes), so the on-chain top-up may complete several minutes after the customer confirms it.
+- The `customerEmail` you provided identifies the customer's wallet. Every successful card payment funds that wallet with the payment amount in the payment currency's token.
+  - **New customer:** a wallet is automatically generated.
+  - **Returning customer:** their existing wallet is used.
+- The page shows only the balance from the customer's payments made **via your merchant account**: the current payment plus any part of their earlier payments via your account not yet transferred to your merchant wallet. Balances from payments made via other merchants are never shown.
+- The customer confirms the transfer to your merchant wallet. The **default is the full available amount** in the payment's currency (the current payment plus what is left of the customer's earlier payments via your merchant account in that currency); the customer may choose to transfer less. Balances in other currencies are displayed but cannot be transferred in this flow.
+- The customer may also **skip the transfer** and return to your `successUrl`. The amount stays in their wallet and can be transferred to you later.
+- A transfer covers the customer's payments with you **oldest first**: it uses up what is left of their earliest payment before moving on to the next. A transfer larger than the current payment therefore also counts towards earlier payments, and a smaller one may leave part of a payment for a later transfer.
+- Blockchain transactions are executed in grouped batches on a schedule (every 15 minutes): first the customer wallet top-ups, then the transfers to merchant wallets. The on-chain transfer may therefore complete several minutes after the customer confirms it.
 
 > **Note:** The wallet top-up never affects the card payment. A captured payment stays captured even if the blockchain transfer is delayed or fails — the platform will resolve the transfer separately.
-
-> **Note:** If the customer never confirms the transfer, the top-up step expires shortly after the 15-minute session token runs out. The card payment stays captured, and a `WALLET_TRANSFER` webhook with `status: EXPIRED` is sent (see [Webhooks](#webhooks) below).
 
 ### Merchant Wallet
 
@@ -240,7 +244,7 @@ You should configure **two** webhooks (one per event type — see [Webhooks](web
 | Event Type        | Triggered When                                                                                  |
 |-------------------|--------------------------------------------------------------------------------------------------|
 | `PAYMENT`    | The payment reaches a terminal status — `COMPLETED` or `DECLINED` (with a `responseCode` for declines) |
-| `WALLET_TRANSFER` | The customer's top-up to your merchant wallet has been captured (`status: COMPLETED`, sent at intent capture; the on-chain transfer may settle shortly after), **or** the top-up window expired without the customer confirming a transfer (`status: EXPIRED`) |
+| `WALLET_TRANSFER` | The customer has requested a transfer to your merchant wallet: one notification per payment the transfer covers, each with `status: COMPLETED` (sent when the transfer is requested; the on-chain transfer may settle shortly after) |
 
 Create the new webhook:
 
@@ -255,7 +259,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/webhooks \
   }'
 ```
 
-The `WALLET_TRANSFER` notification payload follows the same shape as other webhooks — `objectId` is the **payment ID** the transfer belongs to:
+The `WALLET_TRANSFER` notification payload follows the same shape as other webhooks — `objectId` is the **payment ID** the transfer covers:
 
 ```json
 {
@@ -267,20 +271,18 @@ The `WALLET_TRANSFER` notification payload follows the same shape as other webho
 }
 ```
 
-The `status` field is `COMPLETED` when the top-up intent was captured, or `EXPIRED` when the customer completed the card payment but never confirmed a transfer before the session expired. When you receive a `COMPLETED` notification, fetch the payment record to learn the transferred amount (see below).
+The `status` field is always `COMPLETED`. A transfer that covers several of the customer's payments sends one notification per payment. When you receive a notification, fetch the payment record to learn the amount transferred from that payment (see below). A customer who skips the transfer triggers no notification.
 
 ## Tracking the Transferred Amount
 
 `GET /payment/{id}` includes optional wallet-transfer fields on every payment:
 
-| Field                     | Type   | Description                                                                 |
-|---------------------------|--------|------------------------------------------------------------------------------|
-| `walletTransferAmount`    | number | Amount transferred to your merchant wallet for this payment. Absent until a transfer has been captured. |
-| `walletTransferCurrency`  | string | Currency of the wallet transfer amount.                                     |
-| `walletTransferStatus`    | string | `COMPLETED` — the top-up was captured; `EXPIRED` — the customer never confirmed a transfer. Absent while the transfer is still possible. |
-| `walletTransferTxHashUrl` | string | Link to the on-chain transaction for the customer-to-merchant transfer. Absent until the blockchain transfer has been executed. |
+| Field                      | Type     | Description                                                                 |
+|----------------------------|----------|------------------------------------------------------------------------------|
+| `walletTransferredAmount`  | number   | Amount of this payment the customer's transfers to your merchant wallet have covered so far, in the payment currency. `0` until a transfer covers it; absent on payments that do not fund a crypto wallet. |
+| `walletTransferTxHashUrls` | string[] | Links to the on-chain transactions of the transfers that covered this payment. Absent until the first of them has been executed on chain. |
 
-> **Important — settlement:** `walletTransferAmount` may be **less than the payment amount** (the customer chooses how much to transfer) or, for returning customers with leftover balances, up to the full available amount in that currency. **Settlement is based on `walletTransferAmount`, not on the payment amount.** Reconcile against this field, and surface it in your own back office. The same value is shown per payment in the Merchant Backoffice Portal.
+> **Important — settlement:** `walletTransferredAmount` may be **less than the payment amount** (the customer skipped the transfer or chose to transfer less) and grows as later transfers cover the rest of the payment. **Settlement is based on `walletTransferredAmount`, not on the payment amount.** Reconcile against this field, and surface it in your own back office. The same value is shown per payment in the Merchant Backoffice Portal.
 
 ## Card Whitelisting
 
@@ -301,7 +303,7 @@ All errors follow the standard [error format](error-handling.md). Specific to th
 | Payment declined                           | `PAYMENT` webhook with `status=DECLINED` and a `responseCode`; the customer is redirected to your `failureUrl` |
 | Customer abandons the hosted page          | Shortly after the token expires, the payment is declined automatically — `PAYMENT` webhook with `status=DECLINED` and `responseCode=INITIALIZED_PAYMENT_EXPIRED`; no funds are moved |
 | Customer opens the page from a restricted location | The customer is redirected to a blocked-location page and the payment is declined — `PAYMENT` webhook with `status=DECLINED` and a `BLOCKED_LOCATION*` `responseCode` |
-| Customer pays but never confirms the wallet top-up | The card payment stays captured; a `WALLET_TRANSFER` webhook with `status=EXPIRED` is sent after the session expires |
+| Customer pays but skips the wallet transfer | The card payment stays captured and the customer is redirected to your `successUrl`; no `WALLET_TRANSFER` webhook is sent until a transfer covers the payment |
 
 ## Testing
 
@@ -315,4 +317,4 @@ Suggested end-to-end test:
 2. Open the returned `actionUrl` in a browser.
 3. Pay with an approved test card (e.g. `4111111111111111`, `01/2035`, `Jane Smith`) — or a 3DS card to exercise the challenge flow.
 4. Confirm the wallet transfer on the page.
-5. Verify you received the `PAYMENT` (`COMPLETED`) and `WALLET_TRANSFER` webhooks, and that `GET /payment/{id}` shows `walletTransferAmount`.
+5. Verify you received the `PAYMENT` (`COMPLETED`) and `WALLET_TRANSFER` webhooks, and that `GET /payment/{id}` shows `walletTransferredAmount`.

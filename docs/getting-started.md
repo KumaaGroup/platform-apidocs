@@ -132,7 +132,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/webhooks \
   }'
 ```
 
-Create a second webhook with `eventType: WALLET_TRANSFER` to be notified when the customer's wallet top-up is captured — settlement is based on it (see [Crypto Payments](crypto-payments.md#webhooks)).
+Create a second webhook with `eventType: WALLET_TRANSFER` to be notified when a customer transfer covers one of your payments — settlement is based on it (see [Crypto Payments](crypto-payments.md#webhooks)).
 
 ## For KumaaGuard Partners
 

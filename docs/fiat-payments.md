@@ -7,9 +7,9 @@ Fiat Payments are the sibling of [Crypto Payments](crypto-payments.md): the same
 | Crypto Payments                                                   | Fiat Payments                                          |
 |-------------------------------------------------------------------|--------------------------------------------------------|
 | Two-step: card payment, then wallet transfer to your merchant wallet | Single step: card payment only                         |
-| Customer confirms the wallet top-up on the HPP                    | Customer is redirected to your `successUrl` / `failureUrl` right after the payment outcome |
+| Customer confirms or skips the wallet transfer on the HPP         | Customer is redirected to your `successUrl` / `failureUrl` right after the payment outcome |
 | `PAYMENT` webhook **plus** `WALLET_TRANSFER` webhook              | `PAYMENT` webhook only                                 |
-| Settlement based on `walletTransferAmount`                        | No wallet-transfer fields on the payment record        |
+| Settlement based on `walletTransferredAmount`                     | No wallet-transfer fields on the payment record        |
 
 Everything else works as described on the [Crypto Payments](crypto-payments.md) page: the request and response shapes, the 15-minute `actionUrl` token, the [payment lifecycle](crypto-payments.md#payment-lifecycle) (`INITIALIZED → PENDING → COMPLETED / DECLINED`), reading the payment back via [`GET /payment/{id}`](crypto-payments.md#payment-records-and-attempts), and [card whitelisting](crypto-payments.md#card-whitelisting).
 

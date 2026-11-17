@@ -71,7 +71,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/card/
 | `currency`          | string  | Yes      | ISO 4217 currency code — see [Supported Currencies](crypto-payments.md#supported-currencies)  |
 | `amount`            | number  | Yes      | Amount to charge (minimum `0.01`, max 2 decimal places)                                       |
 | `card.number`       | string  | Yes      | Full card number (12–19 digits)                                                               |
-| `card.name`         | string  | Yes      | Cardholder name as printed on the card                                                        |
+| `card.name`         | string  | Yes      | Cardholder's first and last name as printed on the card                                       |
 | `card.expiry.month` | integer | Yes      | Expiry month (1–12)                                                                           |
 | `card.expiry.year`  | integer | Yes      | 4-digit expiry year; month and year together must not be in the past                          |
 | `card.cvc`          | string  | Yes      | Card verification code (3–4 digits)                                                           |
@@ -82,7 +82,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/card/
 | `failureUrl`        | string  | Yes      | Where the customer lands after a failed 3D Secure challenge                                   |
 | `metadata`          | string  | No       | Free-form metadata for your own reference                                                     |
 
-`successUrl` and `failureUrl` are required even though they are only used when the issuer requires a 3DS challenge — without a challenge the customer never leaves your checkout. Requests are validated in full before anything is processed: a malformed field, an unsupported currency, or (in sandbox) a card that is not one of the [test cards](card-payments.md#testing) is rejected with `400`.
+`successUrl` and `failureUrl` are required even though they are only used when the issuer requires a 3DS challenge — without a challenge the customer never leaves your checkout. `card.name` is the cardholder's first and last name: it starts with a letter and contains only letters, spaces, apostrophes, hyphens and periods. Requests are validated in full before anything is processed: a malformed field, an unsupported currency, or (in sandbox) a card that is not one of the [test cards](card-payments.md#testing) is rejected with `400`.
 
 ## Billing Address
 

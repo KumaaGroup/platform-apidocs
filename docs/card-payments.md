@@ -70,7 +70,7 @@ Use the following test cards in the **sandbox** environment, on the hosted payme
 
 ### How test cards work
 
-Each row is one scenario. Submit the card number as shown with any future expiry and a CVC of the card brand's length; where the cardholder name says *any*, it is not checked.
+Each row is one scenario. Submit the card number as shown with any future expiry and a CVC of the card brand's length; where the cardholder name says *any*, any first and last name works.
 
 | Card number        | Cardholder name | Simulated outcome                                                                                           |
 |--------------------|-----------------|-------------------------------------------------------------------------------------------------------------|

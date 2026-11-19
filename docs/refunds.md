@@ -84,8 +84,8 @@ stateDiagram-v2
     [*] --> REQUESTED: refund accepted (HTTP 200)
     REQUESTED --> PENDING: validation passed
     REQUESTED --> DECLINED: validation failed (e.g. refundable amount exceeded)
-    PENDING --> APPROVED: ratio < threshold, or platform-initiated
-    PENDING --> PENDING_APPROVAL: ratio >= threshold or threshold = 0
+    PENDING --> APPROVED: ratio < threshold, review waived, or platform-initiated
+    PENDING --> PENDING_APPROVAL: ratio >= threshold, or every refund reviewed
     PENDING_APPROVAL --> APPROVED: admin approves
     PENDING_APPROVAL --> REJECTED: admin rejects
     APPROVED --> COMPLETED: accepted by payment processor
@@ -99,13 +99,15 @@ stateDiagram-v2
 |--------------------|----------------------------------------------------------------------------------------------|
 | `REQUESTED`        | Refund created and queued for validation                                                      |
 | `PENDING`          | Validation passed (refundable amount verified) — being evaluated against the merchant's refund-ratio threshold |
-| `PENDING_APPROVAL` | At or above the threshold (or threshold disabled) — awaiting manual review by platform administration |
+| `PENDING_APPROVAL` | At or above the threshold (or every refund is reviewed) — awaiting manual review by platform administration |
 | `APPROVED`         | Approved (auto or by admin), refund is being sent to the payment processor                    |
 | `COMPLETED`        | Refund successfully processed by the payment processor (terminal)                             |
 | `REJECTED`         | Refund rejected during manual review by platform administration (terminal)                    |
 | `DECLINED`         | Refund failed validation (e.g. refundable amount exceeded, payment not refundable) or was declined by the payment processor (terminal) |
 
 > **Note on `PENDING_APPROVAL`:** No action is required from the merchant — the platform-administration team will process the approval.
+
+> **Note on the review:** Platform administration sets for each merchant account which refunds are reviewed: every refund, no refund, or refunds from the point where they reach a set share of the account's completed payments over the last 30 days. Sandbox accounts are set up with the review waived, so a sandbox refund moves straight from `PENDING` to `APPROVED`.
 
 > **Note on platform-initiated refunds:** Refunds initiated directly by platform administration bypass the threshold evaluation and move straight from `PENDING` to `APPROVED`.
 

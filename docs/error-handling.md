@@ -121,21 +121,13 @@ For `4xx` errors, do **not** retry — fix the request first. The exception is `
 
 ### Invalid test card (400)
 
-Sandbox payments must use the [published test cards](card-payments.md#testing), and not every listed card is enabled on every account:
+Sandbox payments must use the [published test cards](card-payments.md#testing); any other card is rejected before a payment is created:
 
 ```json
 {
   "status": 400,
   "title": "Bad Request",
   "detail": "card is not valid for test payments"
-}
-```
-
-```json
-{
-  "status": 400,
-  "title": "Bad Request",
-  "detail": "test card is not enabled for this merchant, use another test card from the API docs"
 }
 ```
 

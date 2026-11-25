@@ -315,6 +315,6 @@ Suggested end-to-end test:
 
 1. `POST /payment/crypto/initialize` with a unique `externalId` and a synthetic customer name and `customerEmail`.
 2. Open the returned `actionUrl` in a browser.
-3. Pay with an approved test card (e.g. `4111111111111111`, `01/2035`, `Jane Smith`) — or a 3DS card to exercise the challenge flow.
+3. Pay with an approving test card (e.g. `4000000000000051`, `01/2035`, `Jane Smith`) — at an amount of 500 or more to exercise the 3DS challenge flow.
 4. Confirm the wallet transfer on the page.
 5. Verify you received the `PAYMENT` (`COMPLETED`) and `WALLET_TRANSFER` webhooks, and that `GET /payment/{id}` shows `walletTransferredAmount`.

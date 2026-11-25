@@ -12,6 +12,8 @@ Cards can be charged in various ways. Which of them are available to you depends
 
 Each integration path has its own page ([Crypto Payments](crypto-payments.md), [Fiat Payments](fiat-payments.md), [Server-to-Server Card Payments](server-to-server-card-payments.md)). This page covers the card-side mechanics shared by all of them: the card attempt lifecycle, 3D Secure handling, and the sandbox test cards. Disbursements to cards are described under [Push-to-Card](push-to-card.md).
 
+The platform accepts Visa and Mastercard cards. A card of another network, such as American Express, Discover, JCB or Maestro, is declined before it is processed: the payment ends `DECLINED` with `responseCode` `CARD_NETWORK_NOT_SUPPORTED`. A number the platform cannot attribute to any network is declined with `INVALID_CARD_DATA`.
+
 ## Card Whitelisting Prerequisite
 
 Depending on your merchant account configuration, cards may need to be [whitelisted](blocklist-and-whitelist.md#card-whitelist) before they can be used for payments. If your account has card whitelisting enabled, you must register each card via the whitelist API and wait for the ~72-hour cooldown period to expire before processing a payment. Payments attempted with non-whitelisted or cooldown-active cards will be declined. This applies to both the hosted page and `POST /payment/card/create`.
@@ -93,6 +95,7 @@ Each row is one scenario. Submit the card number as shown with any future expiry
 | `4000000000002370` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
 | `5200000000002490` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
 | `4000000000002537` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
+| `378282246310005`  | any             | Declined, `responseCode` `CARD_NETWORK_NOT_SUPPORTED` (a card of a network other than Visa and Mastercard)  |
 
 - Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
 - Not every listed card is enabled on every account. A card that is not enabled on yours is rejected with `400 Bad Request: "test card is not enabled for this merchant, use another test card from the API docs"` before a payment is created, like a card that is not in the table: pick another row with the same outcome. Your onboarding contact confirms the set for your account.

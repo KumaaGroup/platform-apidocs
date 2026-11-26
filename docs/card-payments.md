@@ -72,22 +72,22 @@ Use the following test cards in the **sandbox** environment, on the hosted payme
 
 Each row is one scenario. Submit the card number as shown with any future expiry and a CVC of the card brand's length; where the cardholder name says *any*, any first and last name works.
 
-| Card number        | Cardholder name | Simulated outcome                                                     |
-|--------------------|-----------------|-----------------------------------------------------------------------|
-| `4000000000000051` | any             | Approved                                                              |
-| `4000000000000028` | any             | Approved                                                              |
-| `5100000000000057` | any             | Approved                                                              |
-| `5100000000000024` | any             | Approved                                                              |
-| `4000000000000010` | any             | Approved, subject to your account's card whitelist and velocity rules |
-| `5100000000000016` | any             | Approved, subject to your account's card whitelist and velocity rules |
-| `4000000000000036` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
-| `5100000000000032` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                         |
-| `4000000000000044` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
-| `5100000000000040` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                              |
-| `4000000000000069` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON`              |
-| `5100000000000065` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON`              |
+| Card number        | Cardholder name | Simulated outcome                                        |
+|--------------------|-----------------|----------------------------------------------------------|
+| `4000000000000051` | any             | Approved                                                 |
+| `4000000000000028` | any             | Approved                                                 |
+| `5100000000000057` | any             | Approved                                                 |
+| `5100000000000024` | any             | Approved                                                 |
+| `4000000000000010` | any             | Approved                                                 |
+| `5100000000000016` | any             | Approved                                                 |
+| `4000000000000036` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`            |
+| `5100000000000032` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`            |
+| `4000000000000044` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                 |
+| `5100000000000040` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                 |
+| `4000000000000069` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON` |
+| `5100000000000065` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON` |
 
 - The amount decides 3DS for an approving card: below 500 in the payment's currency the payment is approved without 3DS; from 500 on it goes through a 3DS challenge. The sandbox challenge page offers **Approve** and **Decline**: Approve completes the payment, Decline declines it with `responseCode` `THREE_DS_FAILED`, and leaving the page unanswered declines it with `THREE_DS_EXPIRED` once the challenge times out. A declining card is declined at any amount, without 3DS.
-- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
+- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.

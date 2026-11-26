@@ -41,7 +41,7 @@ curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/payment/card/
     "currency": "EUR",
     "amount": 29.99,
     "card": {
-      "number": "4111111111111111",
+      "number": "4000000000000051",
       "name": "Jane Smith",
       "expiry": { "month": 1, "year": 2035 },
       "cvc": "123"

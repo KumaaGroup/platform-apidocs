@@ -72,29 +72,22 @@ Use the following test cards in the **sandbox** environment, on the hosted payme
 
 Each row is one scenario. Submit the card number as shown with any future expiry and a CVC of the card brand's length; where the cardholder name says *any*, any first and last name works.
 
-| Card number        | Cardholder name | Simulated outcome                                                                                           |
-|--------------------|-----------------|-------------------------------------------------------------------------------------------------------------|
-| `4111111111111111` | any             | Approved                                                                                                    |
-| `4000000000000168` | any             | Approved without 3DS                                                                                        |
-| `5200000000002235` | any             | Approved after frictionless 3DS (no challenge)                                                              |
-| `4000000000000119` | any             | Approved after a 3DS challenge                                                                              |
-| `4000000000002503` | any             | Approved after a 3DS challenge                                                                              |
-| `5200000000002151` | any             | Approved after a 3DS challenge                                                                              |
-| `4462030000000000` | any             | Approved, subject to your account's card whitelist and velocity rules                                       |
-| `4000000000000101` | any             | Approved after frictionless 3DS (no challenge), subject to your account's card whitelist and velocity rules |
-| `4000000000002719` | any             | Approved after frictionless 3DS (no challenge), subject to your account's card whitelist and velocity rules |
-| `4111111111111105` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                                                                    |
-| `4111111111111143` | any             | Declined, `responseCode` `STOLEN_CARD`                                                                      |
-| `4111111111111151` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`                                                               |
-| `4000000000000127` | any             | Declined, `responseCode` `INVALID_ACCOUNT_NUMBER`                                                           |
-| `4000000000000135` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON`                                                    |
-| `4000000000000143` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
-| `4000000000000150` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
-| `4000000000002370` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
-| `5200000000002490` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
-| `4000000000002537` | any             | Declined, `responseCode` `THREE_DS_FAILED`                                                                  |
+| Card number        | Cardholder name | Simulated outcome                                        |
+|--------------------|-----------------|----------------------------------------------------------|
+| `4000000000000051` | any             | Approved                                                 |
+| `4000000000000028` | any             | Approved                                                 |
+| `5100000000000057` | any             | Approved                                                 |
+| `5100000000000024` | any             | Approved                                                 |
+| `4000000000000010` | any             | Approved                                                 |
+| `5100000000000016` | any             | Approved                                                 |
+| `4000000000000036` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`            |
+| `5100000000000032` | any             | Declined, `responseCode` `INSUFFICIENT_FUNDS`            |
+| `4000000000000044` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                 |
+| `5100000000000040` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                 |
+| `4000000000000069` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON` |
+| `5100000000000065` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON` |
 
-- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed. The exceptions are the rows marked as subject to those rules: use them to test the whitelist API and the behaviour of a blocked card.
-- Not every listed card is enabled on every account. A card that is not enabled on yours is rejected with `400 Bad Request: "test card is not enabled for this merchant, use another test card from the API docs"` before a payment is created, like a card that is not in the table: pick another row with the same outcome. Your onboarding contact confirms the set for your account.
+- The amount decides 3DS for an approving card: below 500 in the payment's currency the payment is approved without 3DS; from 500 on it goes through a 3DS challenge. The sandbox challenge page offers **Approve** and **Decline**: Approve completes the payment, Decline declines it with `responseCode` `THREE_DS_FAILED`, and leaving the page unanswered declines it with `THREE_DS_EXPIRED` once the challenge times out. A declining card is declined at any amount, without 3DS.
+- Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed.
 - Use reachable `successUrl` and `failureUrl` values when testing so you can observe the redirect behaviour.
 - Use a unique `externalId` for each test payment to avoid `409 Conflict` errors.

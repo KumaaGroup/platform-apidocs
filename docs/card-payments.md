@@ -12,6 +12,8 @@ Cards can be charged in various ways. Which of them are available to you depends
 
 Each integration path has its own page ([Crypto Payments](crypto-payments.md), [Fiat Payments](fiat-payments.md), [Server-to-Server Card Payments](server-to-server-card-payments.md)). This page covers the card-side mechanics shared by all of them: the card attempt lifecycle, 3D Secure handling, and the sandbox test cards. Disbursements to cards are described under [Push-to-Card](push-to-card.md).
 
+The platform accepts Visa and Mastercard cards. A card of another network, such as American Express, Discover, JCB or Maestro, is declined before it is processed: the payment ends `DECLINED` with `responseCode` `CARD_NETWORK_NOT_SUPPORTED`. A number the platform cannot attribute to any network is declined with `INVALID_CARD_DATA`.
+
 ## Card Whitelisting Prerequisite
 
 Depending on your merchant account configuration, cards may need to be [whitelisted](blocklist-and-whitelist.md#card-whitelist) before they can be used for payments. If your account has card whitelisting enabled, you must register each card via the whitelist API and wait for the ~72-hour cooldown period to expire before processing a payment. Payments attempted with non-whitelisted or cooldown-active cards will be declined. This applies to both the hosted page and `POST /payment/card/create`.
@@ -86,6 +88,7 @@ Each row is one scenario. Submit the card number as shown with any future expiry
 | `5100000000000040` | any             | Declined, `responseCode` `DO_NOT_HONOUR`                 |
 | `4000000000000069` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON` |
 | `5100000000000065` | any             | Declined, `responseCode` `PAYMENT_REJECTED_OTHER_REASON` |
+| `378282246310005`  | any             | Declined, `responseCode` `CARD_NETWORK_NOT_SUPPORTED`    |
 
 - The amount decides 3DS for an approving card: below 500 in the payment's currency the payment is approved without 3DS; from 500 on it goes through a 3DS challenge. The sandbox challenge page offers **Approve** and **Decline**: Approve completes the payment, Decline declines it with `responseCode` `THREE_DS_FAILED`, and leaving the page unanswered declines it with `THREE_DS_EXPIRED` once the challenge times out. A declining card is declined at any amount, without 3DS.
 - Test cards are exempt from the [card whitelist](blocklist-and-whitelist.md#card-whitelist) and from the consecutive-decline block, so a declining card can be retried as often as needed.

@@ -7,7 +7,7 @@ sequenceDiagram
     participant C as Card
 
     M->>API: POST /push-to-card/initialize (card, amount)
-    API->>API: Platform admin reviews disbursement
+    API->>API: Platform admin reviews disbursement (unless waived)
     API->>C: Push funds (after approval)
     API-->>M: 200 status=REQUESTED
     API-->>M: Webhook: status updates
@@ -15,7 +15,7 @@ sequenceDiagram
 
 Push funds directly to a customer's card. This is useful for disbursements, payouts, or refunds to a different card.
 
-> **Note:** Push-to-card disbursements always require platform-administration review before funds are sent. The payment stays in `REQUESTED` until the platform approves or rejects it.
+> **Note on the review:** Platform administration reviews a push-to-card disbursement before funds are sent, unless it has waived the review for the merchant account. A reviewed disbursement stays in `REQUESTED` until the platform approves or rejects it. Sandbox accounts are set up with the review waived, so a sandbox disbursement moves straight from `REQUESTED` to `APPROVED`.
 
 ```bash
 curl -X POST https://sandbox-merchants-api.nonprod.paygate.systems/push-to-card/initialize \
@@ -78,7 +78,7 @@ Push-to-card disbursements use a different state machine from card payments. The
 ```mermaid
 stateDiagram-v2
     [*] --> REQUESTED
-    REQUESTED --> APPROVED: platform approves
+    REQUESTED --> APPROVED: platform approves, or review waived
     REQUESTED --> REJECTED: platform rejects
     APPROVED --> COMPLETED: payout succeeded
     APPROVED --> DECLINED: payout failed
@@ -89,8 +89,8 @@ stateDiagram-v2
 
 | Status      | Description                                                  |
 |-------------|--------------------------------------------------------------|
-| `REQUESTED` | Disbursement created, awaiting platform-administration review |
-| `APPROVED`  | Approved by platform admin, sent to the payout processor     |
+| `REQUESTED` | Disbursement created; awaits review unless it is waived      |
+| `APPROVED`  | Approved (by review, or with it waived); payout in progress  |
 | `REJECTED`  | Rejected by platform admin during review (terminal)          |
 | `COMPLETED` | Funds successfully pushed to the card (terminal, success)    |
 | `DECLINED`  | Payout failed at the processor (terminal)                    |
